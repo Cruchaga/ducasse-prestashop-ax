@@ -1,0 +1,54 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Xml.Serialization;
+
+namespace IntegracionPrestashopLib.Schema.PS
+{
+    [XmlRoot("order")]
+    public class OrdenDeCompraXML
+    {
+        [XmlElement("id")]
+        public int Id { get; set; }
+
+        [XmlElement("date_add")]
+        public String DateAdd { get; set; }
+
+        //public String Payment { get; set; }         //Metodo de pago
+
+
+        //[XmlElement("id_customer")]
+        //public String CustomerId { get; set; }
+
+        //[XmlElement("current_state")]
+        //public String CurrentState { get; set; }
+
+        //[XmlElement("id_address_delivery")]
+        //public String AddressDeliveryId { get; set; }
+
+        //[XmlElement("id_address_invoice")]
+        //public String InvoiceDeliveryId { get; set; }
+
+        //[XmlElement("id_currency")]
+        //public String CurrencyId { get; set; }
+
+        //[XmlElement("total_paid")]
+        //public String TotalPaid { get; set; }
+
+        //[XmlElement("total_paid_tax_excl")]
+        //public String TotalNeto { get; set; }
+
+        //[XmlElement("total_paid_tax_incl")]
+        //public String TotalFinal { get; set; }
+
+        //[XmlElement("total_discounts")]
+        //public Decimal TotalDiscounts { get; set; }
+
+        //[XmlElement("associations")]
+        //public ProductosAsociados Asociados { get; set; }
+
+        //public String Json { get; set; }
+
+    }
+}

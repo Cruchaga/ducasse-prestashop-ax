@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A40825F9-270D-47D9-A2EC-AC71587202E6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IntegracionPrestashopLib</RootNamespace>
+    <AssemblyName>IntegracionPrestashopLib</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net35\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json.Schema, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.Schema.1.0.11\lib\net35\Newtonsoft.Json.Schema.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Threading.Tasks.NET35, Version=3.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Unofficial.3.1\lib\net35\System.Threading.Tasks.NET35.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Bussiness\Clientes\PSRecursoClient.cs" />
+    <Compile Include="Bussiness\Util\Functions.cs" />
+    <Compile Include="Schema\Dictionary\IntegracionErrorCode.cs" />
+    <Compile Include="Schema\Dictionary\IntegracionOrdenEstados.cs" />
+    <Compile Include="Schema\ERP\Inventario.cs" />
+    <Compile Include="Schema\PS\Address.cs" />
+    <Compile Include="Schema\PS\Country.cs" />
+    <Compile Include="Schema\PS\Currency.cs" />
+    <Compile Include="Schema\PS\Estado.cs" />
+    <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
+    <Compile Include="Schema\PS\Responses\CountryResponse.cs" />
+    <Compile Include="Schema\PS\Responses\CurrencyResponse.cs" />
+    <Compile Include="Schema\PS\Responses\EstadoResponse.cs" />
+    <Compile Include="Schema\PS\Responses\CustomerResponse.cs" />
+    <Compile Include="Bussiness\Clientes\PSOrdenClient.cs" />
+    <Compile Include="Bussiness\Util\Parser.cs" />
+    <Compile Include="Operations\Interfaces\ICrud.cs" />
+    <Compile Include="Operations\OrdenDAL.cs" />
+    <Compile Include="Operations\ProductoDAL.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Schema\dto\OperacionResponse.cs" />
+    <Compile Include="Schema\dto\OrdenesResponse.cs" />
+    <Compile Include="Schema\ERP\Despacho.cs" />
+    <Compile Include="Schema\ERP\DetalleDeVenta.cs" />
+    <Compile Include="Schema\ERP\Direccion.cs" />
+    <Compile Include="Schema\ERP\Facturacion.cs" />
+    <Compile Include="Schema\ERP\OrdenDeVenta.cs" />
+    <Compile Include="Schema\ERP\Producto.cs" />
+    <Compile Include="Schema\PS\Customer.cs" />
+    <Compile Include="Schema\PS\DatosFacturacion.cs" />
+    <Compile Include="Schema\PS\DetalleCompra.cs" />
+    <Compile Include="Schema\PS\Dimension.cs" />
+    <Compile Include="Schema\PS\OrdenDeCompra.cs" />
+    <Compile Include="Schema\PS\Responses\AddressResponse.cs" />
+    <Compile Include="Schema\PS\Responses\OrdenesResponse.cs" />
+    <Compile Include="Schema\PS\Producto.cs" />
+    <Compile Include="Schema\PS\ProductosAsociados.cs" />
+    <Compile Include="Schema\PS\Responses\OrdenesXMLResponse.cs" />
+    <Compile Include="Schema\PS\Responses\ProductResponse.cs" />
+    <Compile Include="Schema\PS\Responses\StateResponse.cs" />
+    <Compile Include="Schema\PS\Responses\UpdateResponse.cs" />
+    <Compile Include="Schema\PS\State.cs" />
+    <Compile Include="Schema\PS\Tupla.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+    <Folder Include="Managers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

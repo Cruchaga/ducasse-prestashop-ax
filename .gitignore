@@ -48,3 +48,14 @@ Thumbs.db
 *.mov
 *.wmv
 
+/IntegraciónPrestashopLib/bin/Debug
+/IntegraciónPrestashopLib/obj/Debug
+/packages
+/Test/bin/Debug
+/Test/obj/Debug/Test.pdb
+/Test/obj/Debug/Test.csprojAssemblyReference.cache
+/Test/obj/Debug/Test.csproj.FileListAbsolute.txt
+/Test/obj/Debug/Test.csproj.CoreCompileInputs.cache
+/Test/obj/Debug/Test.csproj.CopyComplete
+/Test/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+/UnitTestProject

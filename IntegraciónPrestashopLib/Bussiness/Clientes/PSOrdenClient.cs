@@ -82,20 +82,21 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             // Add a user agent header in case the
             // requested URI contains a query.
             String track = "";
+            var serializer = new XmlSerializer(typeof(TrackingRequest));
+            var obj = new TrackingRequest
+            {
+                Tracking = orden
+            };
             using (var sww = new StringWriter())
             {
-
-                var serializer = new XmlSerializer(typeof(TrackingRequest));
+                var enc = new UTF8Encoding(false);
                 using (var memStm = new MemoryStream())
                 using (var xw = XmlWriter.Create(memStm))
                 {
-                    serializer.Serialize(xw, new TrackingRequest
-                    {
-                        Tracking = orden
-                    });
+                    serializer.Serialize(xw, obj) ;
                     var utf8 = memStm.ToArray();
 
-                    track = Encoding.UTF8.GetString(utf8);
+                    track = Encoding.UTF8.GetString(utf8).Trim();
                 }
             }
             try
@@ -107,7 +108,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 req.Headers.Add("Authorization", $"Basic {base64}");
                 //We need to count how many bytes we're sending. 
                 //Post'ed Faked Forms should be name=value&
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(track.Substring(1));
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(track);
                 req.ContentLength = bytes.Length;
                 System.IO.Stream os = req.GetRequestStream();
                 os.Write(bytes, 0, bytes.Length); //Push it out there
@@ -116,7 +117,10 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resp == null) return null;
                 System.IO.StreamReader sr =
                       new System.IO.StreamReader(resp.GetResponseStream());
-                return null;
+                return new UpdateResponse
+                {
+                    Actualizado = true
+                };
             }
             catch (WebException wex)
             {
@@ -125,7 +129,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 return new UpdateResponse
                 {
                     Actualizado = false,
-                    Error = wex.Message,
+                    Error = pageContent,
                     ErrorCode = IntegracionErrorCode.PRESTASHOP_INTERNAL_ERROR
                 };
             }

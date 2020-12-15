@@ -27,8 +27,8 @@ namespace Test
             }
             try
             {
-                var resp = oOrdenDAL.Update(new Tracking(6, 8));
-                Console.WriteLine(resp.ToString());
+                var resp = oOrdenDAL.Update(new Tracking(6, 4));
+                Console.WriteLine(resp.Actualizado.ToString());
             }catch(Exception e)
             {
                 Console.WriteLine(e.Message);

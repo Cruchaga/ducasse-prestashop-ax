@@ -1,24 +1,23 @@
 ﻿using IntegracionPrestashopLib.Bussiness.Clientes;
 using IntegracionPrestashopLib.Bussiness.Util;
 using IntegracionPrestashopLib.Schema.Dictionary;
-using IntegracionPrestashopLib.Schema.dto;
 using IntegracionPrestashopLib.Schema.ERP;
 using IntegracionPrestashopLib.Schema.PS;
 using IntegracionPrestashopLib.Schema.PS.Responses;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace IntegracionPrestashopLib.Operations
 {
-    public class OrdenDAL 
+    public class OrdenDAL
     {
         private String apiKey;
         private String baseUrl;
+
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
         {
@@ -37,7 +36,7 @@ namespace IntegracionPrestashopLib.Operations
         {
             try
             {
-                if(string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(baseUrl))
+                if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(baseUrl))
                 {
                     return new Schema.dto.OrdenesResponse
                     {
@@ -97,20 +96,31 @@ namespace IntegracionPrestashopLib.Operations
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
-                    Task tEstado = Task.Run(() => { 
-                        var estado = pSEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl).estado;
-                        o.Estado = estado.Nombres;
+                    Task tEstado = Task.Run(() =>
+                    {
+                        var estadoResp = pSEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl);
+                        if (estadoResp != null)
+                        {
+                            var estado = estadoResp.estado;
+                            o.Estado = estado.Nombres;
+                        }
                     });
 
-                    Task tCurrency = Task.Run(() => { 
-                        var currency = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl).Currency;
-                        o.CurrencyCode = currency.CurrencyCode;
-                        o.DetalleDeVentas.itemsVendidos.ForEach(d =>
+                    Task tCurrency = Task.Run(() =>
+                    {
+                        var currencyRep = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl);
+                        if (currencyRep != null)
                         {
-                            d.SalesLineCurrencyCode = currency.CurrencyCode;
-                        });
+                            var currency = currencyRep.Currency;
+                            o.CurrencyCode = currency.CurrencyCode;
+                            o.DetalleDeVentas.itemsVendidos.ForEach(d =>
+                            {
+                                d.SalesLineCurrencyCode = currency.CurrencyCode;
+                            });
+                        }
                     });
-                    Task tInvoiceAdd = Task.Run(() => { 
+                    Task tInvoiceAdd = Task.Run(() =>
+                    {
                         var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.CustomerId, apiKey, baseUrl);
                         if (invoiceAddressResp != null)
                         {
@@ -127,9 +137,14 @@ namespace IntegracionPrestashopLib.Operations
                                 }
                             });
 
-                            Task tCustomDel = Task.Run(() => {
-                                var customerDelivery = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl).Clientes;
-                                o.Facturacion.EmailInvoice = customerDelivery.Email;
+                            Task tCustomDel = Task.Run(() =>
+                            {
+                                var customerDeliveryResp = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl);
+                                if (customerDeliveryResp != null)
+                                {
+                                    var customerDelivery = customerDeliveryResp.Clientes;
+                                    o.Facturacion.EmailInvoice = customerDelivery.Email;
+                                }
                             });
                             o.Facturacion.CustNameInvoice = $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}";
                             o.Facturacion.InvoiceAccount = Functions.GetNumberFromRut(invoiceAddress.RutEmpresa);
@@ -140,32 +155,43 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
-                        var deliveryAddress = pSDelivery.GetRecurso("addresses", o.Despacho.AccountNum, apiKey, baseUrl).Address;
-                        o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
-                        o.Despacho.Direccion.AddressCity = deliveryAddress.Ciudad;
-                        o.Despacho.Direccion.AddressStreet = deliveryAddress.Direccion1;
-                        
-                        o.Despacho.CustName = $"{deliveryAddress.Firstname} {deliveryAddress.Lastname}";
-                        o.Despacho.AccountNum = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
-                        o.Despacho.DigitMod11 = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
-                        o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
-                        o.Despacho.LiteralBusiness = deliveryAddress.Company;
+                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.AccountNum, apiKey, baseUrl);
+                        if (deliveryAddressResp != null)
+                        {
+                            var deliveryAddress = deliveryAddressResp.Address;
+                            o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
+                            o.Despacho.Direccion.AddressCity = deliveryAddress.Ciudad;
+                            o.Despacho.Direccion.AddressStreet = deliveryAddress.Direccion1;
 
-                        Task tState = Task.Run(() => {
-                            o.Despacho.Direccion.AddressState = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl).State.StateCode;
-                        });
-                        Task tCustomDel = Task.Run(() => {
-                            var customerDelivery = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl).Clientes;
-                            o.Despacho.ContactEmail = customerDelivery.Email;
-                        });
+                            o.Despacho.CustName = $"{deliveryAddress.Firstname} {deliveryAddress.Lastname}";
+                            o.Despacho.AccountNum = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
+                            o.Despacho.DigitMod11 = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
+                            o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
+                            o.Despacho.LiteralBusiness = deliveryAddress.Company;
 
+                            Task tState = Task.Run(() =>
+                            {
+                                var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl);
+                                if (stateResp != null)
+                                    o.Despacho.Direccion.AddressState = stateResp.State.StateCode;
+                            });
+                            Task tCustomDel = Task.Run(() =>
+                            {
+                                var customerDeliveryResp = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl);
+                                if(customerDeliveryResp != null)
+                                {
+                                    var customerDelivery = customerDeliveryResp.Clientes;
+                                    o.Despacho.ContactEmail = customerDelivery.Email;
+                                }
+                            });
+                        }
                     });
                     tEstado.Wait();
                     tCurrency.Wait();
                     tInvoiceAdd.Wait();
                     tDeliveryAddress.Wait();
                 });
-                
+
                 var ordenes = new Schema.dto.OrdenesResponse();
                 ordenes.SetOrdenesDeVenta(resp);
                 return ordenes;
@@ -187,9 +213,41 @@ namespace IntegracionPrestashopLib.Operations
          * Esperado para actualizar el tracking del pedido
          * </remarks>
          */
-        public Boolean Update(OrdenDeVenta o)
+        public UpdateResponse Update(Tracking tracking)
         {
-            return true;
+            Type _type;
+            FieldInfo[] propList;
+            bool existe;
+            ValidateEstadoId(tracking.NuevoEstadoId, out _type, out propList, out existe);
+            if (!existe)
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE,
+                    Error = $"El valor de estado [{tracking.NuevoEstadoId}] no se reconoce. Los valores aceptados son: [{String.Join(",", propList.Select(p => $"{p.GetValue(_type).ToString()}").ToArray<String>())}]"
+                };
+            }
+
+            return PSOrdenClient.UpdateTracking(new OrderHistory
+            {
+                EmployeeId = 2,
+                EstadoId = tracking.NuevoEstadoId,
+                OrderId = tracking.OrdenId
+            }, apiKey, baseUrl);
+
+        }
+
+        private static void ValidateEstadoId(int estado, out Type _type, out FieldInfo[] propList, out bool existe)
+        {
+            _type = typeof(IntegracionOrdenEstados);
+            propList = _type.GetFields();
+            existe = false;
+            foreach (System.Reflection.FieldInfo prop in propList)
+            {
+                if ((int)prop.GetValue(_type) == estado)
+                    existe = true;
+            }
         }
     }
 }

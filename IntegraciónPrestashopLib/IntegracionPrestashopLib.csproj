@@ -55,12 +55,15 @@
     <Compile Include="Schema\Dictionary\IntegracionErrorCode.cs" />
     <Compile Include="Schema\Dictionary\IntegracionOrdenEstados.cs" />
     <Compile Include="Schema\ERP\Inventario.cs" />
+    <Compile Include="Schema\ERP\Tracking.cs" />
     <Compile Include="Schema\PS\Address.cs" />
     <Compile Include="Schema\PS\Country.cs" />
     <Compile Include="Schema\PS\Currency.cs" />
     <Compile Include="Schema\PS\Estado.cs" />
     <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
+    <Compile Include="Schema\PS\Request\TrackingRequest.cs" />
     <Compile Include="Schema\PS\Responses\CountryResponse.cs" />
+    <Compile Include="Schema\PS\Responses\CreateResponse.cs" />
     <Compile Include="Schema\PS\Responses\CurrencyResponse.cs" />
     <Compile Include="Schema\PS\Responses\EstadoResponse.cs" />
     <Compile Include="Schema\PS\Responses\CustomerResponse.cs" />
@@ -92,6 +95,7 @@
     <Compile Include="Schema\PS\Responses\StateResponse.cs" />
     <Compile Include="Schema\PS\Responses\UpdateResponse.cs" />
     <Compile Include="Schema\PS\State.cs" />
+    <Compile Include="Schema\PS\OrderHistory.cs" />
     <Compile Include="Schema\PS\Tupla.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -18,33 +18,34 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
     internal class PSRecursoClient<T, V>
     {
         private Hashtable resources;
-        internal V GetRecurso(String recurso, String currencyId, String apiKey, String baseUrl)
+        internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             if (resources == null)
                 resources = new Hashtable();
-            if (resources[currencyId] == null)
-                ObtenerRecurso(recurso, currencyId, apiKey, baseUrl);
+            if (resources[recursoId] == null)
+                ObtenerRecurso(recurso, recursoId, apiKey, baseUrl);
             sw.Stop();
             Console.WriteLine($"Tiempo {recurso}: {sw.Elapsed.TotalMilliseconds} ms");
-            return (V)resources[currencyId];
+            return (V)resources[recursoId];
         }
 
-        private void ObtenerRecurso(String recurso, string clientId, String apiKey, String baseUrl)
+        private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl)
         {
             try
             {
-                String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(apiKey));
+                String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
-                String url = $"{baseUrl}{recurso}/{clientId}?output_format=JSON&ws_key={apiKey}";
+                
+                String url = $"{baseUrl}{recurso}/{recursoId}?output_format=JSON";// &ws_key={apiKey}";
                 // Get the response.
                 const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
                 const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
                 ServicePointManager.SecurityProtocol = Tls12;
 
                 WebClient client = new WebClient();
-                client.Headers.Add("Authorization", $"Basic {base64}");
+                client.Headers.Add(HttpRequestHeader.Authorization, $"Basic {base64}");
 
                 // Add a user agent header in case the
                 // requested URI contains a query.
@@ -63,10 +64,10 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
                     if (resources == null)
                         resources = new Hashtable();
-                    if (resources[clientId] == null)
-                        resources.Add(clientId, resp);
+                    if (resources[recursoId] == null)
+                        resources.Add(recursoId, resp);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
 
                     return;

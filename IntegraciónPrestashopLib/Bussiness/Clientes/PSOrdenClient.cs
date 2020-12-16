@@ -1,4 +1,5 @@
-﻿using IntegracionPrestashopLib.Schema.Dictionary;
+﻿using IntegracionPrestashopLib.Bussiness.Util;
+using IntegracionPrestashopLib.Schema.Dictionary;
 using IntegracionPrestashopLib.Schema.PS;
 using IntegracionPrestashopLib.Schema.PS.Request;
 using IntegracionPrestashopLib.Schema.PS.Responses;
@@ -81,24 +82,11 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
             // Add a user agent header in case the
             // requested URI contains a query.
-            String track = "";
-            var serializer = new XmlSerializer(typeof(TrackingRequest));
             var obj = new TrackingRequest
             {
                 Tracking = orden
             };
-            using (var sww = new StringWriter())
-            {
-                var enc = new UTF8Encoding(false);
-                using (var memStm = new MemoryStream())
-                using (var xw = XmlWriter.Create(memStm))
-                {
-                    serializer.Serialize(xw, obj) ;
-                    var utf8 = memStm.ToArray();
-
-                    track = Encoding.UTF8.GetString(utf8).Trim();
-                }
-            }
+            String track = Functions.SerializeXML(obj);
             try
             {
                 HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);

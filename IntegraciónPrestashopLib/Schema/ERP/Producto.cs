@@ -64,6 +64,11 @@ namespace IntegracionPrestashopLib.Schema.ERP
          */
         public String TaxPackagingQty { get; set; }
 
+        public Decimal NetWeight { get; set; }
+        public Decimal GrossDepth { get; set; }
+        public Decimal GrossWidth { get; set; }
+        public Decimal GrossHeight { get; set; }
+
         public Inventario Inventario { get; set; }
     }
 }

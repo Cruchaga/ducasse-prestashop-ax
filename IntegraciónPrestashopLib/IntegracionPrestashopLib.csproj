@@ -50,6 +50,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bussiness\Clientes\PSProductoClient.cs" />
     <Compile Include="Bussiness\Clientes\PSRecursoClient.cs" />
     <Compile Include="Bussiness\Util\Functions.cs" />
     <Compile Include="Schema\Dictionary\IntegracionErrorCode.cs" />
@@ -61,6 +62,8 @@
     <Compile Include="Schema\PS\Currency.cs" />
     <Compile Include="Schema\PS\Estado.cs" />
     <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
+    <Compile Include="Schema\PS\Request\ProductRequest.cs" />
+    <Compile Include="Schema\PS\Request\StockRequest.cs" />
     <Compile Include="Schema\PS\Request\TrackingRequest.cs" />
     <Compile Include="Schema\PS\Responses\CountryResponse.cs" />
     <Compile Include="Schema\PS\Responses\CreateResponse.cs" />
@@ -90,12 +93,13 @@
     <Compile Include="Schema\PS\Responses\OrdenesResponse.cs" />
     <Compile Include="Schema\PS\Producto.cs" />
     <Compile Include="Schema\PS\ProductosAsociados.cs" />
-    <Compile Include="Schema\PS\Responses\OrdenesXMLResponse.cs" />
     <Compile Include="Schema\PS\Responses\ProductResponse.cs" />
     <Compile Include="Schema\PS\Responses\StateResponse.cs" />
+    <Compile Include="Schema\PS\Responses\StockAvailableRepsonse.cs" />
     <Compile Include="Schema\PS\Responses\UpdateResponse.cs" />
     <Compile Include="Schema\PS\State.cs" />
     <Compile Include="Schema\PS\OrderHistory.cs" />
+    <Compile Include="Schema\PS\StockAvailable.cs" />
     <Compile Include="Schema\PS\Tupla.cs" />
   </ItemGroup>
   <ItemGroup>

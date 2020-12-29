@@ -8,13 +8,9 @@ namespace IntegracionPrestashopLib.Schema.ERP
     public class Producto
     {
         /*
-         * Codigo de producto
-         */
-        public String ItemId { get; set; }
-        /*
          * Id dimension
          */
-        public String InventDimId { get; set; }
+        public String ItemId_InventDimId { get; set; }
         /*
          * Codigo de barras
          */
@@ -32,18 +28,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
          */
         public String ItemTxt { get; set; }
         /*
-         * Id Configuracion 
-         */
-        public String ConfigId { get; set; }
-        /*
-         * Id Tamaño
-         */
-        public String SizeId { get; set; }
-        /*
-         * Id Color 
-         */
-        public String ColorId { get; set; }
-        /*
          * Precio venta
          */
         public Int64 SalesPrice { get; set; }
@@ -59,10 +43,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
          * Cantidad maxima de compra
          */
         public Decimal QtyMaxToBuy { get; set; }
-        /*
-         * Cantidad por embalaje
-         */
-        public String TaxPackagingQty { get; set; }
 
         public Decimal NetWeight { get; set; }
         public Decimal GrossDepth { get; set; }

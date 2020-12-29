@@ -11,7 +11,7 @@ namespace IntegracionPrestashopLib.Schema.PS
     {
         [JsonProperty("id")]
         [XmlElement("id")]
-        public int ProductId { get; set; }
+        public Int32 ProductId { get; set; }
         //[JsonProperty("active")]
         //[JsonProperty("additional_delivery_times")]
         //[JsonProperty("additional_shipping_cost")]
@@ -29,14 +29,6 @@ namespace IntegracionPrestashopLib.Schema.PS
         //[JsonProperty("date_upd")]
         //[JsonProperty("delivery_in_stock")]
         //[JsonProperty("delivery_out_stock")]
-        [JsonProperty("description")]
-        [XmlElement("description")]
-        public String Descripcion { get; set; }
-        
-        [JsonProperty("description_short")]
-        [XmlElement("description_short")]
-        public String DescripcionCorta { get; set; }
-        
         [JsonProperty("ean13")]
         [XmlElement("ean13")]
         public String CodeBarEan13 { get; set; }
@@ -74,10 +66,6 @@ namespace IntegracionPrestashopLib.Schema.PS
         //[JsonProperty("meta_keywords")]
         //[JsonProperty("meta_title")]
         //[JsonProperty("minimal_quantity")]
-        
-        [JsonProperty("name")]
-        [XmlElement("name")]
-        public String Nombre { get; set; }
         //[JsonProperty("new")]
         //[JsonProperty("on_sale")]
         //[JsonProperty("online_only")]
@@ -95,7 +83,9 @@ namespace IntegracionPrestashopLib.Schema.PS
         public String Reference { get; set; }
         //[JsonProperty("show_condition")]
         //[JsonProperty("show_price")]
-        //[JsonProperty("state")]
+        [JsonProperty("state")]
+        [XmlElement("state")]
+        public String State { get; set; } = "1";
         //[JsonProperty("supplier_reference")]
         //[JsonProperty("text_fields")]
         //[JsonProperty("type")]
@@ -109,9 +99,56 @@ namespace IntegracionPrestashopLib.Schema.PS
         public String Weight { get; set; }
         //[JsonProperty("wholesale_price")]
 
-        public bool ShouldSerializeManager()
+        [JsonIgnore]
+        [XmlElement("link_rewrite")]
+        public LangDescriptions UrlAmigable { get; set; }
+
+        [JsonIgnore]
+        [XmlElement("name")]
+        public LangDescriptions Name { get; set; }
+
+        [JsonIgnore]
+        [XmlElement("description")]
+        public LangDescriptions Description { get; set; }
+
+        [JsonIgnore]
+        [XmlElement("description_short")]
+        public LangDescriptions ShortDescription { get; set; }
+        
+        [XmlIgnore]
+        [JsonProperty("link_rewrite")]
+        public String UrlAmigableString { get; set; }
+
+        [XmlIgnore]
+        [JsonProperty("name")]
+        public String NameString { get; set; }
+
+        [XmlIgnore]
+        [JsonProperty("description")]
+        public String DescriptionString { get; set; }
+
+        [XmlIgnore]
+        [JsonProperty("description_short")]
+        public String ShortDescriptionString { get; set; }
+
+        public bool ShouldSerializeProductId()
         {
             return (this.ProductId != 0);
         }
     }       
+    
+    public class LangDescriptions
+    {
+        [XmlElement("language")]
+        public Lang Languages { get; set; }
+    }
+
+    public class Lang
+    {
+        [XmlAttribute("id")]
+        public String LangId { get; set; }
+        [XmlText]
+        public String Language { get; set; }
+    }
+
 }

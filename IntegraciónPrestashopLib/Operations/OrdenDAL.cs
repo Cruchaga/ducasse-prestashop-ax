@@ -18,6 +18,11 @@ namespace IntegracionPrestashopLib.Operations
         private String apiKey;
         private String baseUrl;
 
+        private PSRecursoClient<Estado, EstadoResponse> pSEstado = new PSRecursoClient<Estado, EstadoResponse>();
+        private PSRecursoClient<Customer, CustomerResponse> psCustomer = new PSRecursoClient<Customer, CustomerResponse>();
+        private PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>();
+        private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
+        private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
         {
@@ -88,11 +93,7 @@ namespace IntegracionPrestashopLib.Operations
                                                                       }).ToList()),
                                 EstadoId = oc.CurrentState
                             }).ToList<OrdenDeVenta>();
-                PSRecursoClient<Estado, EstadoResponse> pSEstado = new PSRecursoClient<Estado, EstadoResponse>();
-                PSRecursoClient<Customer, CustomerResponse> psCustomer = new PSRecursoClient<Customer, CustomerResponse>();
-                PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>();
-                PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
-                PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
+
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
@@ -147,8 +148,8 @@ namespace IntegracionPrestashopLib.Operations
                                 }
                             });
                             o.Facturacion.CustNameInvoice = $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}";
-                            o.Facturacion.InvoiceAccount = Functions.GetNumberFromRut(invoiceAddress.RutEmpresa);
-                            o.Facturacion.DigitMod11 = Functions.GetDvFromRut(invoiceAddress.RutEmpresa);
+                            o.Facturacion.Rut = Functions.GetNumberFromRut(invoiceAddress.RutEmpresa);
+                            //o.Facturacion.DigitMod11 = Functions.GetDvFromRut(invoiceAddress.RutEmpresa);
                             o.Facturacion.LiteralBusiness = invoiceAddress.Company;
                         }
                     });
@@ -215,19 +216,19 @@ namespace IntegracionPrestashopLib.Operations
          */
         public UpdateResponse Update(Tracking tracking)
         {
-            Type _type;
-            FieldInfo[] propList;
-            bool existe;
-            ValidateEstadoId(tracking.NuevoEstadoId, out _type, out propList, out existe);
-            if (!existe)
-            {
-                return new UpdateResponse
-                {
-                    Actualizado = false,
-                    ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE,
-                    Error = $"El valor de estado [{tracking.NuevoEstadoId}] no se reconoce. Los valores aceptados son: [{String.Join(",", propList.Select(p => $"{p.GetValue(_type).ToString()}").ToArray<String>())}]"
-                };
-            }
+            //Type _type;
+            //FieldInfo[] propList;
+            //bool existe;
+            //ValidateEstadoId(tracking.NuevoEstadoId, out _type, out propList, out existe);
+            //if (!existe)
+            //{
+            //    return new UpdateResponse
+            //    {
+            //        Actualizado = false,
+            //        ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE,
+            //        Error = $"El valor de estado [{tracking.NuevoEstadoId}] no se reconoce. Los valores aceptados son: [{String.Join(",", propList.Select(p => $"{p.GetValue(_type).ToString()}").ToArray<String>())}]"
+            //    };
+            //}
 
             return PSOrdenClient.UpdateTracking(new OrderHistory
             {

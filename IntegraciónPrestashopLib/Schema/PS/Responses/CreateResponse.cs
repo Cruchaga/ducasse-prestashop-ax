@@ -12,6 +12,7 @@ namespace IntegracionPrestashopLib.Schema.PS.Responses
         {
             this.ErrorCode = IntegracionErrorCode.NONE;
         }
+        internal object Objeto { get; set; }
         public Boolean Creado { get; set; }
         public int ErrorCode { get; set; }
         public String Error { get; set; }

@@ -18,7 +18,73 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 {
     internal class PSProductoClient
     {
-        internal static UpdateResponse UpdateProduct(Producto orden, String apiKey, String prestashopUrlBase)
+
+        internal static CreateResponse CreateProduct(Producto orden, String apiKey, String prestashopUrlBase)
+        {
+            String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+
+            String url = $"{prestashopUrlBase}products?output_format=JSON";
+            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
+            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
+            ServicePointManager.SecurityProtocol = Tls12;
+            var obj = new ProductRequest
+            {
+                producto = orden
+            };
+            string xmlBody = Functions.SerializeXML(obj);
+
+            try
+            {
+                HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
+                //Add these, as we're doing a POST
+                req.ContentType = "application/xml";
+                req.Method = "POST";
+                req.Headers.Add("Authorization", $"Basic {base64}");
+                //We need to count how many bytes we're sending. 
+                //Post'ed Faked Forms should be name=value&
+                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(xmlBody);
+                req.ContentLength = bytes.Length;
+                System.IO.Stream os = req.GetRequestStream();
+                os.Write(bytes, 0, bytes.Length); //Push it out there
+                os.Close();
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                
+                if (resp == null) return null;
+                var response = 
+                      new System.IO.StreamReader(resp.GetResponseStream()).ReadToEnd();
+
+                resp.Close();
+                
+                return new CreateResponse
+                {
+                    Creado = true,
+                    Objeto = JsonConvert.DeserializeObject<ProductResponse>(response)
+                };
+            }
+            catch (WebException wex)
+            {
+                var pageContent = new StreamReader(wex.Response.GetResponseStream())
+                                      .ReadToEnd();
+                return new CreateResponse
+                {
+                    Creado = false,
+                    Error = pageContent,
+                    ErrorCode = IntegracionErrorCode.PRESTASHOP_INTERNAL_ERROR
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Excepcion: {e.Message}");
+                return new CreateResponse
+                {
+                    Creado = false,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = e.Message
+                };
+            }
+        }
+
+        internal static UpdateResponse UpdateProduct(ProductToUpdate orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
@@ -26,7 +92,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
             const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
             ServicePointManager.SecurityProtocol = Tls12;
-            var obj = new ProductRequest
+            var obj = new ProductUpdateRequest
             {
                 producto = orden
             };
@@ -50,6 +116,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resp == null) return null;
                 System.IO.StreamReader sr =
                       new System.IO.StreamReader(resp.GetResponseStream());
+                sr.Close();
+                resp.Close();
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -110,6 +178,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resp == null) return null;
                 System.IO.StreamReader sr =
                       new System.IO.StreamReader(resp.GetResponseStream());
+                sr.Close();
+                resp.Close();
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -133,7 +203,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 {
                     Actualizado = false,
                     ErrorCode = IntegracionErrorCode.UNCONTROLATED,
-                    Error = e.Message
+                    Error = $"Error: {e.Message} {Environment.NewLine} {e.StackTrace}"
                 };
             }
         }

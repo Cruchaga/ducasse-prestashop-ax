@@ -14,6 +14,10 @@ namespace IntegracionPrestashopLib.Schema.Dictionary
 
         internal const int BAD_ATTRIBUTE = 3;
 
-        public const int PRESTASHOP_INTERNAL_ERROR = 4;
+        internal const int PRESTASHOP_INTERNAL_ERROR = 4;
+
+        internal const int BAD_CREATED = 5;
+
+        internal const int NOT_FOUND = 6;
     }
 }

@@ -7,21 +7,56 @@ namespace IntegracionPrestashopLib.Bussiness.Util
 {
     internal class Parser
     {
-        public Schema.PS.Producto GetPSProductoFromERP(Schema.ERP.Producto producto)
+        internal static void parsePSProdFromERP(Schema.ERP.Producto prodIn, ref Schema.PS.Producto prodOut)
         {
-            try
+            prodOut.Alto = prodIn.GrossHeight.ToString().Replace(",", ".");
+            prodOut.Ancho = prodIn.GrossWidth.ToString().Replace(",", ".");
+            prodOut.Profundidad = prodIn.GrossDepth.ToString().Replace(",", ".");
+            prodOut.CodeBarEan13 = prodIn.ItemBarCode;
+            prodOut.Precio = prodIn.SalesPrice.ToString().Replace(",", ".");
+            prodOut.Reference = prodIn.ItemId_InventDimId;
+            prodOut.Weight = prodIn.NetWeight.ToString().Replace(",", ".");
+            prodOut.Description = new Schema.PS.LangDescriptions
             {
-                return new Schema.PS.Producto
+                Languages = new Schema.PS.Lang
                 {
-                    //TODO: Implementar
-                };
-            }
-            catch(Exception e)
+                    LangId = "1",
+                    Language = prodIn.ItemTxt
+                }
+            };
+            prodOut.DescriptionString = prodIn.ItemTxt;
+
+            prodOut.Name = new Schema.PS.LangDescriptions
             {
-                //TODO: aplicar logging
-                return null;
-            }
+                Languages = new Schema.PS.Lang
+                {
+                    LangId = "1",
+                    Language = prodIn.ItemName
+                }
+            };
+            prodOut.NameString = prodIn.ItemName;
+
+            prodOut.ShortDescription = new Schema.PS.LangDescriptions
+            {
+                Languages = new Schema.PS.Lang
+                {
+                    LangId = "1",
+                    Language = prodIn.NameAlias
+                }
+            };
+            prodOut.ShortDescriptionString = prodIn.NameAlias;
+
+            prodOut.UrlAmigable = new Schema.PS.LangDescriptions
+            {
+                Languages = new Schema.PS.Lang
+                {
+                    LangId = "1",
+                    Language = prodIn.NameAlias
+                }
+            };
+            prodOut.UrlAmigableString = prodIn.NameAlias;
         }
+
 
         public Schema.ERP.OrdenDeVenta GetOVFromPSOC(Schema.PS.OrdenDeCompra orden)
         {

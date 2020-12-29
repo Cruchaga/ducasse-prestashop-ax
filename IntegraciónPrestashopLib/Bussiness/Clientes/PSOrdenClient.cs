@@ -105,6 +105,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resp == null) return null;
                 System.IO.StreamReader sr =
                       new System.IO.StreamReader(resp.GetResponseStream());
+                resp.Close();
+                sr.Close();
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -128,7 +130,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 {
                     Actualizado = false,
                     ErrorCode = IntegracionErrorCode.UNCONTROLATED,
-                    Error = e.Message
+                    Error = $"Error al actualizar tracking : {e.Message}"
                 };
             }
         }

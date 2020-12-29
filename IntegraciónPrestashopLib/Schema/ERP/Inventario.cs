@@ -7,7 +7,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
 {
     public class Inventario
     {
-        public int ProductoId { get; set; }
-        public Decimal Stock { get; set; }
+        public String ItemId_InventDimId { get; set; }
+        public int Stock { get; set; }
     }
 }

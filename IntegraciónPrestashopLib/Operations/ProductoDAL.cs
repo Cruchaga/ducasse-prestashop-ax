@@ -1,4 +1,6 @@
 ﻿using IntegracionPrestashopLib.Bussiness.Clientes;
+using IntegracionPrestashopLib.Bussiness.Util;
+using IntegracionPrestashopLib.Schema.Dictionary;
 using IntegracionPrestashopLib.Schema.dto;
 using IntegracionPrestashopLib.Schema.ERP;
 using IntegracionPrestashopLib.Schema.PS.Responses;
@@ -16,6 +18,8 @@ namespace IntegracionPrestashopLib.Operations
         private String apiKey;
         private String baseUrl;
 
+        private PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse> psProducto = new PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse>();
+        private PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSStock = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>();
 
         public ProductoDAL(String apiKey, String prestashopUrlBase)
         {
@@ -29,12 +33,71 @@ namespace IntegracionPrestashopLib.Operations
          */
         public CreateResponse Create(Producto producto)
         {
-            return  new CreateResponse
+            Schema.PS.Producto psProd = new Schema.PS.Producto();
+            Parser.parsePSProdFromERP(producto, ref psProd);
+
+            var res = PSProductoClient.CreateProduct(psProd, apiKey, baseUrl);
+            if (res.Creado)
             {
-                Creado = true
-            };
+                if (producto.Inventario != null)
+                {
+                    var stockRes = UpdateStock(producto.Inventario.Stock.ToString(), ((ProductResponse)res.Objeto).Producto.ProductId);
+                    if (stockRes.Actualizado)
+                    {
+                        return new CreateResponse
+                        {
+                            Creado = true
+                        };
+                    }
+                    else
+                    {
+                        return new CreateResponse
+                        {
+                            Creado = true,
+                            ErrorCode = IntegracionErrorCode.BAD_CREATED,
+                            Error = $"El producto se creó pero el stock no se ingresó como corresponde. Error interno = [{stockRes.Error}]."
+                        };
+                    }
+                }
+                else
+                {
+                    return new CreateResponse { Creado = true };
+                }
+            }
+            else
+            {
+                return res;
+            }
         }
 
+       public UpdateResponse Merge(Producto producto)
+        {
+            try
+            {
+                var prodResult = psProducto.GetRecursoWithFilter("products", producto.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{producto.ItemId_InventDimId}]&display=full");
+                if (prodResult == null || prodResult.products == null)
+                {
+                    return new UpdateResponse
+                    {
+                        Actualizado = false,
+                        ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                        Error = $"El producto con referencia {producto.ItemId_InventDimId} no fué encontrado. Objeto prestashop: {psProducto.getJson(producto.ItemId_InventDimId)}"
+                    };
+                }
+                var prod = (Schema.PS.Producto)prodResult.products[0];
+                Parser.parsePSProdFromERP(producto, ref prod);
+
+                return PSProductoClient.UpdateProduct((Schema.PS.ProductToUpdate)prod, apiKey, baseUrl);
+            }catch(Exception e)
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = $"No se logró actualizar el producto : {e.Message} {Environment.NewLine} StackTrace: {e.StackTrace}"
+                };
+            }
+        }
         /**
          * <summary>
          * Método que permite actualizar tanto los atributos del producto como el stock
@@ -42,9 +105,34 @@ namespace IntegracionPrestashopLib.Operations
          */
         public UpdateResponse UpdateStock(Inventario stockProd)
         {
-            PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSProducto = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>();
-            var stock = pSProducto.GetRecursoWithFilter("stock_availables", stockProd.ProductoId.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{stockProd.ProductoId}]");
-            stock.Stock[0].Stock = stockProd.Stock.ToString();
+            try
+            {
+                var prod = psProducto.GetRecursoWithFilter("products", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full");
+                if (prod == null || prod.products == null)
+                {
+                    return new UpdateResponse
+                    {
+                        Actualizado = false,
+                        ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                        Error = $"El producto con referencia {stockProd.ItemId_InventDimId} no fué encontrado. respuesta de PS: {psProducto.getJson(stockProd.ItemId_InventDimId)}"
+                    };
+                }
+                return UpdateStock(stockProd.Stock.ToString().Replace(",", "."), prod.products[0].ProductId);
+            }catch(Exception e)
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = $"No se logró actualizar el producto : {e.Message} {Environment.NewLine} StackTrace: {e.StackTrace}"
+                };
+            }
+        }
+
+        private UpdateResponse UpdateStock(String stockProd,  int prodID)
+        {
+            var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]");
+            stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
 

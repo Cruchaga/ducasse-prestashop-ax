@@ -70,7 +70,7 @@ namespace IntegracionPrestashopLib.Operations
                                 },
                                 Despacho = new Schema.ERP.Despacho
                                 {
-                                    AccountNum = oc.AddressDeliveryId,
+                                    Rut = oc.AddressDeliveryId,
                                     Direccion = new Direccion()
                                 },
                                 PaymMode = oc.Payment,
@@ -148,15 +148,14 @@ namespace IntegracionPrestashopLib.Operations
                                 }
                             });
                             o.Facturacion.CustNameInvoice = $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}";
-                            o.Facturacion.Rut = Functions.GetNumberFromRut(invoiceAddress.RutEmpresa);
-                            //o.Facturacion.DigitMod11 = Functions.GetDvFromRut(invoiceAddress.RutEmpresa);
+                            o.Facturacion.Rut = invoiceAddress.RutEmpresa;
                             o.Facturacion.LiteralBusiness = invoiceAddress.Company;
                         }
                     });
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
-                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.AccountNum, apiKey, baseUrl);
+                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.Rut, apiKey, baseUrl);
                         if (deliveryAddressResp != null)
                         {
                             var deliveryAddress = deliveryAddressResp.Address;
@@ -165,8 +164,7 @@ namespace IntegracionPrestashopLib.Operations
                             o.Despacho.Direccion.AddressStreet = deliveryAddress.Direccion1;
 
                             o.Despacho.CustName = $"{deliveryAddress.Firstname} {deliveryAddress.Lastname}";
-                            o.Despacho.AccountNum = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
-                            o.Despacho.DigitMod11 = Functions.GetNumberFromRut(deliveryAddress.RutEmpresa);
+                            o.Despacho.Rut = deliveryAddress.RutEmpresa;
                             o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
                             o.Despacho.LiteralBusiness = deliveryAddress.Company;
 

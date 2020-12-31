@@ -27,27 +27,11 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
             String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
-            // Get the response.
-            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-            ServicePointManager.SecurityProtocol = Tls12;
-
-            WebClient client = new WebClient();
-            client.Headers.Add("Authorization", $"Basic {base64}");
             
-            // Add a user agent header in case the
-            // requested URI contains a query.
-
-            client.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
-
             try
             {
-                Stream data = client.OpenRead(url);
-                StreamReader reader = new StreamReader(data);
-                string s = reader.ReadToEnd();
-                //Console.WriteLine(s);
-                data.Close();
-                reader.Close();
+
+                string s = HttpRequestFunctions.GetRequest(url, base64);
                 OrdenesResponse resp = new OrdenesResponse
                 {
                     Orders = new List<OrdenDeCompra>()
@@ -74,14 +58,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
             String url = $"{prestashopUrlBase}order_histories/{orden.OrderId}";
-            // Get the response.
-            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-            ServicePointManager.SecurityProtocol = Tls12;
+            string method = "POST";
 
-
-            // Add a user agent header in case the
-            // requested URI contains a query.
             var obj = new TrackingRequest
             {
                 Tracking = orden
@@ -89,24 +67,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             String track = Functions.SerializeXML(obj);
             try
             {
-                HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
-                //Add these, as we're doing a POST
-                req.ContentType = "application/xml";
-                req.Method = "POST";
-                req.Headers.Add("Authorization", $"Basic {base64}");
-                //We need to count how many bytes we're sending. 
-                //Post'ed Faked Forms should be name=value&
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(track);
-                req.ContentLength = bytes.Length;
-                System.IO.Stream os = req.GetRequestStream();
-                os.Write(bytes, 0, bytes.Length); //Push it out there
-                os.Close();
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                if (resp == null) return null;
-                System.IO.StreamReader sr =
-                      new System.IO.StreamReader(resp.GetResponseStream());
-                resp.Close();
-                sr.Close();
+                var response = HttpRequestFunctions.Request(base64, url, track, method);
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -114,8 +75,9 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (WebException wex)
             {
-                var pageContent = new StreamReader(wex.Response.GetResponseStream())
-                                      .ReadToEnd();
+                var sr = new StreamReader(wex.Response.GetResponseStream());
+                var pageContent = sr.ReadToEnd();
+                sr.Close();
                 return new UpdateResponse
                 {
                     Actualizado = false,

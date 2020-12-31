@@ -1,4 +1,5 @@
-﻿using IntegracionPrestashopLib.Schema.ERP;
+﻿using IntegracionPrestashopLib.Bussiness.Util;
+using IntegracionPrestashopLib.Schema.ERP;
 using IntegracionPrestashopLib.Schema.PS.Responses;
 using Newtonsoft.Json;
 using System;
@@ -49,30 +50,13 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             try
             {
                 String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
-
-
-                String url = $"{baseUrl}{recurso}{recursoId}?output_format=JSON{filtros}";// &ws_key={apiKey}";
-                // Get the response.
-                const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-                const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-                ServicePointManager.SecurityProtocol = Tls12;
-
-                WebClient client = new WebClient();
-                client.Headers.Add(HttpRequestHeader.Authorization, $"Basic {base64}");
-
-                // Add a user agent header in case the
-                // requested URI contains a query.
-
-                client.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
+                String url = $"{baseUrl}{recurso}{recursoId}?output_format=JSON{filtros}";
+                
 
                 try
                 {
-                    Stream data = client.OpenRead(url);
-                    StreamReader reader = new StreamReader(data);
-                    string s = reader.ReadToEnd();
-                    //Console.WriteLine(s);
-                    data.Close();
-                    reader.Close();
+                    string s = HttpRequestFunctions.GetRequest(url, base64);
+
                     V resp = JsonConvert.DeserializeObject<V>(s);
 
                     if (resources == null)
@@ -103,6 +87,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         {
             return jsonResources[id].ToString();
         }
+
         private void ObtenerRecursoWithFilter(String recurso, string recursoId, String apiKey, String baseUrl, String filtros)
         {
             String url = "";
@@ -110,44 +95,22 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             try
             {
                 base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+                url = $"{baseUrl}{recurso}?output_format=JSON{filtros}";
+                string s = HttpRequestFunctions.GetRequest(url, base64);
 
+                V resp = JsonConvert.DeserializeObject<V>(s);
 
-                url = $"{baseUrl}{recurso}?output_format=JSON{filtros}";// &ws_key={apiKey}";
-                // Get the response.
-                const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-                const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-                ServicePointManager.SecurityProtocol = Tls12;
-
-                WebClient client = new WebClient();
-                client.Headers.Add(HttpRequestHeader.Authorization, $"Basic {base64}");
-
-                // Add a user agent header in case the
-                // requested URI contains a query.
-
-                client.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
-                
-                using (Stream data = client.OpenRead(url))
+                if (resources == null)
+                    resources = new Hashtable();
+                if (resources[recursoId] == null)
                 {
-                    using (StreamReader reader = new StreamReader(data))
-                    {
-                        string s = reader.ReadToEnd();
-                        //Console.WriteLine(s);
-                        data.Close();
-                        reader.Close();
-
-                        V resp = JsonConvert.DeserializeObject<V>(s);
-
-                        if (resources == null)
-                            resources = new Hashtable();
-                        if (resources[recursoId] == null)
-                        {
-                            Console.WriteLine($"Agregando {resp.ToString()} a lista... pues se encontró vacío = {{{resources[recursoId]}}} ");
-                            resources.Add(recursoId, resp);
-                            Console.WriteLine($"recurso {recurso} agregado. qty de recursos: {resources.Count}");
-                        }
-                    }
+                    Console.WriteLine($"Agregando {resp.ToString()} a lista... pues se encontró vacío = {{{resources[recursoId]}}} ");
+                    resources.Add(recursoId, resp);
+                    Console.WriteLine($"recurso {recurso} agregado. qty de recursos: {resources.Count}");
                 }
-            }catch(TimeoutException t)
+
+            }
+            catch (TimeoutException t)
             {
                 throw new Exception($"Timeout detectado al intentar consumir la url {url} con apikey {base64}", t);
             }

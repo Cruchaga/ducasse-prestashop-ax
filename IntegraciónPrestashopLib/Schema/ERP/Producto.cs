@@ -8,7 +8,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
     public class Producto
     {
         /*
-         * Id dimension
+         * Id de producto
          */
         public String ItemId_InventDimId { get; set; }
         /*
@@ -38,11 +38,11 @@ namespace IntegracionPrestashopLib.Schema.ERP
         /*
          * Link de imagen
          */
-        public String ItemImg { get; set; }
+        //public String ItemImg { get; set; }
         /*
          * Cantidad maxima de compra
          */
-        public Decimal QtyMaxToBuy { get; set; }
+        //public Decimal QtyMaxToBuy { get; set; }
 
         public Decimal NetWeight { get; set; }
         public Decimal GrossDepth { get; set; }

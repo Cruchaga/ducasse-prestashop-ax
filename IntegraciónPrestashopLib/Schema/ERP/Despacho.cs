@@ -7,8 +7,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
 {
     public class Despacho
     {
-        public String AccountNum { get; set; }
-        public String DigitMod11 { get; set; }
+        public String Rut { get; set; }
         public String CustName { get; set; }
         public String LiteralBusiness { get; set; }
         public Direccion Direccion { get; set; }

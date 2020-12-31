@@ -5,14 +5,9 @@ using IntegracionPrestashopLib.Schema.PS.Request;
 using IntegracionPrestashopLib.Schema.PS.Responses;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Security.Authentication;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace IntegracionPrestashopLib.Bussiness.Clientes
 {
@@ -22,39 +17,16 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         internal static CreateResponse CreateProduct(Producto orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
-
             String url = $"{prestashopUrlBase}products?output_format=JSON";
-            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-            ServicePointManager.SecurityProtocol = Tls12;
             var obj = new ProductRequest
             {
                 producto = orden
             };
             string xmlBody = Functions.SerializeXML(obj);
-
+            string method = "POST";
             try
             {
-                HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
-                //Add these, as we're doing a POST
-                req.ContentType = "application/xml";
-                req.Method = "POST";
-                req.Headers.Add("Authorization", $"Basic {base64}");
-                //We need to count how many bytes we're sending. 
-                //Post'ed Faked Forms should be name=value&
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(xmlBody);
-                req.ContentLength = bytes.Length;
-                System.IO.Stream os = req.GetRequestStream();
-                os.Write(bytes, 0, bytes.Length); //Push it out there
-                os.Close();
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                
-                if (resp == null) return null;
-                var response = 
-                      new System.IO.StreamReader(resp.GetResponseStream()).ReadToEnd();
-
-                resp.Close();
-                
+                string response = HttpRequestFunctions.Request(base64, url, xmlBody, method);
                 return new CreateResponse
                 {
                     Creado = true,
@@ -63,8 +35,9 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (WebException wex)
             {
-                var pageContent = new StreamReader(wex.Response.GetResponseStream())
-                                      .ReadToEnd();
+                var sr = new StreamReader(wex.Response.GetResponseStream());
+                var pageContent = sr.ReadToEnd();
+                sr.Close();
                 return new CreateResponse
                 {
                     Creado = false,
@@ -87,11 +60,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         internal static UpdateResponse UpdateProduct(ProductToUpdate orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
-
             String url = $"{prestashopUrlBase}products";
-            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-            ServicePointManager.SecurityProtocol = Tls12;
+            string method = "PUT";
             var obj = new ProductUpdateRequest
             {
                 producto = orden
@@ -100,24 +70,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
             try
             {
-                HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
-                //Add these, as we're doing a POST
-                req.ContentType = "application/xml";
-                req.Method = "PUT";
-                req.Headers.Add("Authorization", $"Basic {base64}");
-                //We need to count how many bytes we're sending. 
-                //Post'ed Faked Forms should be name=value&
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(xmlBody);
-                req.ContentLength = bytes.Length;
-                System.IO.Stream os = req.GetRequestStream();
-                os.Write(bytes, 0, bytes.Length); //Push it out there
-                os.Close();
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                if (resp == null) return null;
-                System.IO.StreamReader sr =
-                      new System.IO.StreamReader(resp.GetResponseStream());
-                sr.Close();
-                resp.Close();
+                string response = HttpRequestFunctions.Request(base64, url, xmlBody, method);
+
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -125,8 +79,9 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (WebException wex)
             {
-                var pageContent = new StreamReader(wex.Response.GetResponseStream())
-                                      .ReadToEnd();
+                var sr = new StreamReader(wex.Response.GetResponseStream());
+                var pageContent = sr.ReadToEnd();
+                sr.Close();
                 return new UpdateResponse
                 {
                     Actualizado = false,
@@ -151,35 +106,16 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
             String url = $"{prestashopUrlBase}stock_availables/schema=blank";
-            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
-            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
-            ServicePointManager.SecurityProtocol = Tls12;
             var obj = new StockRequest
             {
                 Stock = stockA
             };
             string xmlBody = Functions.SerializeXML(obj);
-
+            string method = "PUT";
             try
             {
-                HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
-                //Add these, as we're doing a POST
-                req.ContentType = "application/xml";
-                req.Method = "PUT";
-                req.Headers.Add("Authorization", $"Basic {base64}");
-                //We need to count how many bytes we're sending. 
-                //Post'ed Faked Forms should be name=value&
-                byte[] bytes = System.Text.Encoding.ASCII.GetBytes(xmlBody);
-                req.ContentLength = bytes.Length;
-                System.IO.Stream os = req.GetRequestStream();
-                os.Write(bytes, 0, bytes.Length); //Push it out there
-                os.Close();
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                if (resp == null) return null;
-                System.IO.StreamReader sr =
-                      new System.IO.StreamReader(resp.GetResponseStream());
-                sr.Close();
-                resp.Close();
+                string response = HttpRequestFunctions.Request(base64, url, xmlBody, method);
+
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -187,8 +123,9 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (WebException wex)
             {
-                var pageContent = new StreamReader(wex.Response.GetResponseStream())
-                                      .ReadToEnd();
+                var sr = new StreamReader(wex.Response.GetResponseStream());
+                var pageContent = sr.ReadToEnd();
+                sr.Close();
                 return new UpdateResponse
                 {
                     Actualizado = false,

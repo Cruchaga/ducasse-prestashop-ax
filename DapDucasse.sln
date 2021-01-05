@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegracionPrestashopLib", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{89E17706-A021-4C2E-8711-93E5F442D1F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegracionEnviame", "IntegracionEnviame\IntegracionEnviame.csproj", "{2B2A3682-7498-46AB-AB21-C483AF026378}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{89E17706-A021-4C2E-8711-93E5F442D1F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89E17706-A021-4C2E-8711-93E5F442D1F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89E17706-A021-4C2E-8711-93E5F442D1F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B2A3682-7498-46AB-AB21-C483AF026378}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B2A3682-7498-46AB-AB21-C483AF026378}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B2A3682-7498-46AB-AB21-C483AF026378}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B2A3682-7498-46AB-AB21-C483AF026378}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

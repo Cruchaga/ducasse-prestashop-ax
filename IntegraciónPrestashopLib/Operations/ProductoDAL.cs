@@ -61,7 +61,12 @@ namespace IntegracionPrestashopLib.Operations
                 }
                 else
                 {
-                    return new CreateResponse { Creado = true };
+                    return new CreateResponse
+                    {
+                        Creado = true,
+                        ErrorCode = IntegracionErrorCode.BAD_CREATED,
+                        Error = $"El producto se creó pero el stock no se ingresó como corresponde. Error interno = El stock se encuentra vacío."
+                    };
                 }
             }
             else

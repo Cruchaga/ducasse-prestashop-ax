@@ -41,20 +41,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\Operaciones.cs" />
+    <Compile Include="Bussiness\Clientes\EnviameClient.cs" />
+    <Compile Include="Bussiness\Util\Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Schema\Dictionary\IntegracionErrors.cs" />
     <Compile Include="Schema\dto\Error.cs" />
-    <Compile Include="Schema\Request\MakeDeliveryRequest.cs" />
-    <Compile Include="Schema\Request\MakeManifestRequest.cs" />
-    <Compile Include="Schema\Response\GetTrackingResponse.cs" />
-    <Compile Include="Schema\Response\MakeDeliveryResponse.cs" />
-    <Compile Include="Schema\Response\MakeManifestResponse.cs" />
-    <Compile Include="Schema\Response\MakeWithdrawalResponse.cs" />
+    <Compile Include="Schema\Enviame\Request\MakeDeliveryRequest.cs" />
+    <Compile Include="Schema\Enviame\Request\MakeManifestRequest.cs" />
+    <Compile Include="Schema\Enviame\Response\GetTrackingResponse.cs" />
+    <Compile Include="Schema\Enviame\Response\MakeDeliveryResponse.cs" />
+    <Compile Include="Schema\Enviame\Response\MakeManifestResponse.cs" />
+    <Compile Include="Schema\Enviame\Response\MakeWithdrawalResponse.cs" />
+    <Compile Include="Schema\Requests\CrearEnvioRequest.cs" />
+    <Compile Include="Schema\Requests\CrearRetiroRequest.cs" />
+    <Compile Include="Schema\Responses\CrearEnvioResponse.cs" />
+    <Compile Include="Schema\Responses\CrearManifiestoResponse.cs" />
+    <Compile Include="Schema\Responses\CreateResponse.cs" />
+    <Compile Include="Schema\Responses\VerTrackingResponse.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Bussiness\Clientes\" />
-    <Folder Include="Bussiness\Util\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

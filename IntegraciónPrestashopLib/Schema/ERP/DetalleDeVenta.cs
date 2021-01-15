@@ -36,7 +36,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
     public class Detalle
     {
         public String ItemId { get; set; }
-        public String InventDimId { get; set; }
+        public String Sku { get; set; }
         //public String InventLocationId { get; set; }
         public Decimal SalesLineQty { get; set; }
         public String SalesLineCurrencyCode { get; set; }

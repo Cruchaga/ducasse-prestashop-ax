@@ -14,6 +14,9 @@ namespace IntegracionEnviame.Schema.Response
         public Warehouse Warehouse { get; set; }
         public Contact Contact { get; set; }
 
+        [JsonProperty("pickup_date")]
+        public List<String> pickupDate { get; set; }
+
         [JsonProperty("qty")]
         public String PackagesQty { get; set; }
 

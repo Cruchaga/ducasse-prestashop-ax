@@ -20,7 +20,7 @@ namespace IntegracionPrestashopLib.Bussiness.Util
             WebClient client = new WebClient();
             client.Headers.Add(HttpRequestHeader.Authorization, $"Basic {base64}");
             client.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
-
+            
             Stream data = client.OpenRead(url);
             StreamReader reader = new StreamReader(data);
             string s = reader.ReadToEnd();
@@ -37,7 +37,7 @@ namespace IntegracionPrestashopLib.Bussiness.Util
             const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
             ServicePointManager.SecurityProtocol = Tls12;
 
-            HttpWebRequest req = (HttpWebRequest)System.Net.WebRequest.Create(url);
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
             req.ContentType = "application/xml";
             req.Method = method;
             req.Headers.Add("Authorization", $"Basic {base64}");

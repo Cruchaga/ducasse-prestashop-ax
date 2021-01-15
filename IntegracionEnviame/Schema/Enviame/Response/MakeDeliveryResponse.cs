@@ -25,7 +25,16 @@ namespace IntegracionEnviame.Schema.Response
         public String Service { get; set; }
         public Label Label { get; set; }
 
+        public Link[] Links { get; set; }
+
     }
+
+    public class Link
+    {
+        public String Rel { get; set; }
+        public String Href { get; set; }
+    }
+
     public class Customer
     {
         [JsonProperty("full_name")]

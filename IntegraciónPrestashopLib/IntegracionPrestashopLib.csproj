@@ -104,6 +104,7 @@
     <Compile Include="Schema\PS\State.cs" />
     <Compile Include="Schema\PS\OrderHistory.cs" />
     <Compile Include="Schema\PS\StockAvailable.cs" />
+    <Compile Include="Schema\PS\tDoc.cs" />
     <Compile Include="Schema\PS\Tupla.cs" />
   </ItemGroup>
   <ItemGroup>

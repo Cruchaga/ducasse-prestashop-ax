@@ -17,6 +17,7 @@ namespace IntegracionEnviame.Schema.Request
         [JsonProperty("shipping_destination")]
         public ShippingDetination ShippingDestination { get; set; }
 
+        [JsonProperty("carrier")]
         public Carrier Carrier { get; set; }
 
         public MakeDeliveryRequest()
@@ -49,7 +50,9 @@ namespace IntegracionEnviame.Schema.Request
 
     public class ShippingDetination
     {
+        [JsonProperty("customer")]
         public Customer Customer { get; set; }
+
         [JsonProperty("delivery_address")]
         public DeliveryAddress DeliveryAddress { get; set; }
 
@@ -78,6 +81,7 @@ namespace IntegracionEnviame.Schema.Request
         
         [JsonProperty("full_address")]
         public String FullAddress { get; set; }
+        [JsonProperty("information")]
         public String Information { get; set; }
 
         public HomeAddress()
@@ -90,8 +94,13 @@ namespace IntegracionEnviame.Schema.Request
 
     public class Customer
     {
+        [JsonProperty("name")]
         public String Name { get; set; }
+
+        [JsonProperty("email")]
         public String Email { get; set; }
+
+        [JsonProperty("phone")]
         public String Phone { get; set; }
 
         public Customer()
@@ -127,8 +136,13 @@ namespace IntegracionEnviame.Schema.Request
         [JsonProperty("order_price")]
         public int TotalPrice { get; set; }
 
+        [JsonProperty("weight")]
         public String Weight { get; set; }
+
+        [JsonProperty("volume")]
         public String Volume { get; set; }
+
+        [JsonProperty("type")]
         public String Type { get; set; }
 
         public ShippingOrder()

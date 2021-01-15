@@ -1,5 +1,4 @@
 ﻿using IntegracionPrestashopLib.Bussiness.Clientes;
-using IntegracionPrestashopLib.Bussiness.Util;
 using IntegracionPrestashopLib.Schema.Dictionary;
 using IntegracionPrestashopLib.Schema.ERP;
 using IntegracionPrestashopLib.Schema.PS;
@@ -23,6 +22,7 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>();
         private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
         private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
+        private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>();
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
         {
@@ -62,6 +62,7 @@ namespace IntegracionPrestashopLib.Operations
                             select new OrdenDeVenta
                             {
                                 SalesIdPrestaShop = oc.Id,
+                                IdCart = oc.IdCart,
                                 SalesDate = oc.DateAdd,
                                 Facturacion = new Facturacion
                                 {
@@ -77,14 +78,15 @@ namespace IntegracionPrestashopLib.Operations
                                 Factura = true, //TODO: averiguar con Ivan aguilera
                                 TotalWeight = 0,
                                 CurrencyId = oc.CurrencyId, //TODO: normalizar currency table con ERP
-                                TotalNetAmount = Decimal.Parse(oc.TotalNeto),
-                                TaxAmount = Decimal.Parse(oc.TotalFinal) - Decimal.Parse(oc.TotalNeto),
-                                TotalAmount = Decimal.Parse(oc.TotalFinal),
+                                TotalNetAmount = Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
+                                TaxAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")) - Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
+                                TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
+                                TotalAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")),
                                 DetalleDeVentas = new DetalleDeVenta((from d in oc.Asociados.productos
                                                                       select new Detalle
                                                                       {
                                                                           ItemId = d.ProductId,
-                                                                          InventDimId = d.Reference,
+                                                                          Sku = d.Reference,
                                                                           SalesLineQty = Decimal.Parse(d.Cantidad.Replace(".", ",")),
                                                                           SalesLinePriceList = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) / Decimal.Parse(d.Cantidad.Replace(".", ",")),
                                                                           SalesLineDiscountPercent = 0,
@@ -134,7 +136,8 @@ namespace IntegracionPrestashopLib.Operations
 
                                 if (comunaResp != null)
                                 {
-                                    o.Facturacion.Direccion.AddressState = comunaResp.State.StateCode;
+                                    string codComuna = GetStringDecimalFromHexa(comunaResp.State.StateCode);
+                                    o.Facturacion.Direccion.AddressState = codComuna;
                                 }
                             });
 
@@ -147,9 +150,22 @@ namespace IntegracionPrestashopLib.Operations
                                     o.Facturacion.EmailInvoice = customerDelivery.Email;
                                 }
                             });
-                            o.Facturacion.CustNameInvoice = $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}";
-                            o.Facturacion.Rut = invoiceAddress.RutEmpresa;
-                            o.Facturacion.LiteralBusiness = invoiceAddress.Company;
+                            Task tDoc = Task.Run(() =>
+                            {
+                                String url = baseUrl.Replace("api", "WS");
+
+                                var document = psDocument.GetRecursoWithFilter("tdoc.php", "", apiKey, url, $"&id_carro={o.IdCart}");
+                                if (document != null)
+                                {
+                                    o.Facturacion.CustNameInvoice = document.RazonSocial;
+                                    o.Facturacion.Rut = document.Rut;
+                                    o.Facturacion.LiteralBusiness = document.Giro;
+                                }
+
+                            });
+                            tState.Wait();
+                            tCustomDel.Wait();
+                            tDoc.Wait();
                         }
                     });
 
@@ -167,22 +183,23 @@ namespace IntegracionPrestashopLib.Operations
                             o.Despacho.Rut = deliveryAddress.RutEmpresa;
                             o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
                             o.Despacho.LiteralBusiness = deliveryAddress.Company;
-
                             Task tState = Task.Run(() =>
                             {
                                 var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl);
                                 if (stateResp != null)
-                                    o.Despacho.Direccion.AddressState = stateResp.State.StateCode;
+                                    o.Despacho.Direccion.AddressState = GetStringDecimalFromHexa(stateResp.State.StateCode);
                             });
                             Task tCustomDel = Task.Run(() =>
                             {
                                 var customerDeliveryResp = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl);
-                                if(customerDeliveryResp != null)
+                                if (customerDeliveryResp != null)
                                 {
                                     var customerDelivery = customerDeliveryResp.Clientes;
                                     o.Despacho.ContactEmail = customerDelivery.Email;
                                 }
                             });
+                            tState.Wait();
+                            tCustomDel.Wait();
                         }
                     });
                     tEstado.Wait();
@@ -204,14 +221,20 @@ namespace IntegracionPrestashopLib.Operations
                 };
             }
         }
+
+        private static string GetStringDecimalFromHexa(String comunaResp)
+        {
+            return comunaResp.Length == 4 ? Convert.ToInt64(comunaResp, 16).ToString() : comunaResp;
+        }
+
         /**
-         * <summary>
-         * Metodo que permite la actualización de las ordenes de venta en Prestashop
-         * </summary>
-         * <remarks>
-         * Esperado para actualizar el tracking del pedido
-         * </remarks>
-         */
+* <summary>
+* Metodo que permite la actualización de las ordenes de venta en Prestashop
+* </summary>
+* <remarks>
+* Esperado para actualizar el tracking del pedido
+* </remarks>
+*/
         public UpdateResponse Update(Tracking tracking)
         {
             //Type _type;

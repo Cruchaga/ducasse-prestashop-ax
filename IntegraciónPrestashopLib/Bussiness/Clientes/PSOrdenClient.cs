@@ -26,7 +26,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
 
-            String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
+            String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
             
             try
             {

@@ -7,7 +7,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
 {
     public class Facturacion
     {
-        internal String CustomerId { get; set; }
         public String Rut { get; set; }
         public String CustNameInvoice { get; set; }
         public String LiteralBusiness { get; set; }

@@ -40,9 +40,9 @@ namespace IntegracionPrestashopLib.Schema.ERP
         //public String InventLocationId { get; set; }
         public Decimal SalesLineQty { get; set; }
         public String SalesLineCurrencyCode { get; set; }
-        public Decimal SalesLinePriceList { get; set; }
-        public Decimal SalesLineDiscountPercent { get; set; }
-        public Decimal SalesLineNetTotal { get; set; }
-        public Decimal SalesLineTotalAmount { get; set; }
+        public Decimal SalesLineNetPrice { get; set; }
+        public Decimal SalesLinePrice { get; set; }
+        public Decimal SalesLineNetTotalAmount { get; set; }
+        public Decimal SalesLineTotal { get; set; }
     }
 }

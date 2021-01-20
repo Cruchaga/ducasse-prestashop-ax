@@ -64,20 +64,25 @@ namespace IntegracionPrestashopLib.Operations
                                 SalesIdPrestaShop = oc.Id,
                                 IdCart = oc.IdCart,
                                 SalesDate = oc.DateAdd,
+                                CustomerId = oc.CustomerId,
                                 Facturacion = new Facturacion
                                 {
-                                    CustomerId = oc.InvoiceDeliveryId,
-                                    Direccion = new Direccion()
+                                    Direccion = new Direccion
+                                    {
+                                        AddressId = oc.InvoiceDeliveryId
+                                    }
                                 },
                                 Despacho = new Schema.ERP.Despacho
                                 {
-                                    Rut = oc.AddressDeliveryId,
-                                    Direccion = new Direccion()
+                                    Direccion = new Direccion
+                                    {
+                                        AddressId = oc.AddressDeliveryId
+                                    }
                                 },
                                 PaymMode = oc.Payment,
-                                Factura = true, //TODO: averiguar con Ivan aguilera
+                                Factura = false, 
                                 TotalWeight = 0,
-                                CurrencyId = oc.CurrencyId, //TODO: normalizar currency table con ERP
+                                CurrencyId = oc.CurrencyId, 
                                 TotalNetAmount = Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
                                 TaxAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")) - Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
                                 TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
@@ -88,10 +93,10 @@ namespace IntegracionPrestashopLib.Operations
                                                                           ItemId = d.ProductId,
                                                                           Sku = d.Reference,
                                                                           SalesLineQty = Decimal.Parse(d.Cantidad.Replace(".", ",")),
-                                                                          SalesLinePriceList = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) / Decimal.Parse(d.Cantidad.Replace(".", ",")),
-                                                                          SalesLineDiscountPercent = 0,
-                                                                          SalesLineNetTotal = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")),
-                                                                          SalesLineTotalAmount = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ","))
+                                                                          SalesLineNetPrice = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")), //TODO: agregar dcto
+                                                                          SalesLinePrice = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")),//TODO: agregar dcto
+                                                                          SalesLineNetTotalAmount = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ",")),
+                                                                          SalesLineTotal = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ","))
                                                                       }).ToList()),
                                 EstadoId = oc.CurrentState
                             }).ToList<OrdenDeVenta>();
@@ -106,6 +111,17 @@ namespace IntegracionPrestashopLib.Operations
                         {
                             var estado = estadoResp.estado;
                             o.Estado = estado.Nombres;
+                        }
+                    });
+
+                    Task tCustomer = Task.Run(() =>
+                    {
+                        var customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl);
+                        if (customerResp != null)
+                        {
+                            var customer = customerResp.Clientes;
+                            o.CustomerName = $"{customer.Nombre} {customer.Apellido}";
+                            o.CustomerEmail = customer.Email;
                         }
                     });
 
@@ -124,7 +140,7 @@ namespace IntegracionPrestashopLib.Operations
                     });
                     Task tInvoiceAdd = Task.Run(() =>
                     {
-                        var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.CustomerId, apiKey, baseUrl);
+                        var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl);
                         if (invoiceAddressResp != null)
                         {
                             var invoiceAddress = invoiceAddressResp.Address;
@@ -137,7 +153,7 @@ namespace IntegracionPrestashopLib.Operations
                                 if (comunaResp != null)
                                 {
                                     string codComuna = GetStringDecimalFromHexa(comunaResp.State.StateCode);
-                                    o.Facturacion.Direccion.AddressState = codComuna;
+                                    o.Facturacion.Direccion.AddressCounty = codComuna;
                                 }
                             });
 
@@ -154,12 +170,13 @@ namespace IntegracionPrestashopLib.Operations
                             {
                                 String url = baseUrl.Replace("api", "WS");
 
-                                var document = psDocument.GetRecursoWithFilter("tdoc.php", "", apiKey, url, $"&id_carro={o.IdCart}");
+                                var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}");
                                 if (document != null)
                                 {
                                     o.Facturacion.CustNameInvoice = document.RazonSocial;
                                     o.Facturacion.Rut = document.Rut;
                                     o.Facturacion.LiteralBusiness = document.Giro;
+                                    o.Factura = document.Tipo == 33;
                                 }
 
                             });
@@ -171,7 +188,7 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
-                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.Rut, apiKey, baseUrl);
+                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.Direccion.AddressId, apiKey, baseUrl);
                         if (deliveryAddressResp != null)
                         {
                             var deliveryAddress = deliveryAddressResp.Address;
@@ -187,7 +204,7 @@ namespace IntegracionPrestashopLib.Operations
                             {
                                 var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl);
                                 if (stateResp != null)
-                                    o.Despacho.Direccion.AddressState = GetStringDecimalFromHexa(stateResp.State.StateCode);
+                                    o.Despacho.Direccion.AddressCounty = GetStringDecimalFromHexa(stateResp.State.StateCode);
                             });
                             Task tCustomDel = Task.Run(() =>
                             {
@@ -224,7 +241,13 @@ namespace IntegracionPrestashopLib.Operations
 
         private static string GetStringDecimalFromHexa(String comunaResp)
         {
-            return comunaResp.Length == 4 ? Convert.ToInt64(comunaResp, 16).ToString() : comunaResp;
+            if(comunaResp.Length == 4)
+            {
+                String decimalCode = Convert.ToInt64(comunaResp, 16).ToString();
+                return decimalCode.Length == 4 ? $"0{decimalCode}" : decimalCode;
+            }
+            else
+                return comunaResp;
         }
 
         /**

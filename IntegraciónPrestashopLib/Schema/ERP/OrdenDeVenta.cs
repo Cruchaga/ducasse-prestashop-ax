@@ -9,6 +9,9 @@ namespace IntegracionPrestashopLib.Schema.ERP
     {
         public Int64 SalesIdPrestaShop { get; set; }
         internal String EstadoId { get; set; }
+        internal String CustomerId { get; set; }
+        public String CustomerName { get; set; }
+        public String CustomerEmail { get; set; }
         internal String IdCart { get; set; }
         public String Estado { get; set; }
         public DateTime SalesDate { get; set; }

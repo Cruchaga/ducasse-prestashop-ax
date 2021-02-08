@@ -63,6 +63,7 @@
     <Compile Include="Schema\PS\Currency.cs" />
     <Compile Include="Schema\PS\Estado.cs" />
     <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
+    <Compile Include="Schema\PS\Payment.cs" />
     <Compile Include="Schema\PS\ProductToUpdate.cs" />
     <Compile Include="Schema\PS\Request\ProductRequest.cs" />
     <Compile Include="Schema\PS\Request\ProductUpdateRequest.cs" />
@@ -96,6 +97,7 @@
     <Compile Include="Schema\PS\Responses\OrdenesResponse.cs" />
     <Compile Include="Schema\PS\Producto.cs" />
     <Compile Include="Schema\PS\ProductosAsociados.cs" />
+    <Compile Include="Schema\PS\Responses\PaymentsResponse.cs" />
     <Compile Include="Schema\PS\Responses\ProductQueryResponse.cs" />
     <Compile Include="Schema\PS\Responses\ProductResponse.cs" />
     <Compile Include="Schema\PS\Responses\StateResponse.cs" />

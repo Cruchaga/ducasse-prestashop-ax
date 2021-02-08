@@ -22,6 +22,7 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>();
         private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
         private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
+        private PSRecursoClient<Payment, PaymentsResponse> psPayment = new PSRecursoClient<Payment, PaymentsResponse>();
         private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>();
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
@@ -62,6 +63,7 @@ namespace IntegracionPrestashopLib.Operations
                             select new OrdenDeVenta
                             {
                                 SalesIdPrestaShop = oc.Id,
+                                Referencia = oc.Referencia,
                                 IdCart = oc.IdCart,
                                 SalesDate = oc.DateAdd,
                                 CustomerId = oc.CustomerId,
@@ -86,6 +88,7 @@ namespace IntegracionPrestashopLib.Operations
                                 TotalNetAmount = Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
                                 TaxAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")) - Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
                                 TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
+                                NetShippingAmount = Decimal.Parse(oc.NetShipping.Replace(".", ",")),
                                 TotalAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")),
                                 DetalleDeVentas = new DetalleDeVenta((from d in oc.Asociados.productos
                                                                       select new Detalle
@@ -104,6 +107,7 @@ namespace IntegracionPrestashopLib.Operations
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
+                    Customer customer;
                     Task tEstado = Task.Run(() =>
                     {
                         var estadoResp = pSEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl);
@@ -119,7 +123,7 @@ namespace IntegracionPrestashopLib.Operations
                         var customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl);
                         if (customerResp != null)
                         {
-                            var customer = customerResp.Clientes;
+                            customer = customerResp.Clientes;
                             o.CustomerName = $"{customer.Nombre} {customer.Apellido}";
                             o.CustomerEmail = customer.Email;
                         }
@@ -146,6 +150,7 @@ namespace IntegracionPrestashopLib.Operations
                             var invoiceAddress = invoiceAddressResp.Address;
                             o.Facturacion.Direccion.AddressCity = invoiceAddress.Ciudad;
                             o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
+                            o.Facturacion.PhoneNumber = invoiceAddress.Phone;
                             Task tState = Task.Run(() =>
                             {
                                 var comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl);
@@ -185,6 +190,16 @@ namespace IntegracionPrestashopLib.Operations
                             tDoc.Wait();
                         }
                     });
+                    Task tPayments = Task.Run(() =>
+                    {
+                        var paymentResp = psPayment.GetRecursoWithFilter("order_payments", o.Referencia, apiKey, baseUrl, $"&filter[order_reference]=[{o.Referencia}]&display=full");
+
+                        if (paymentResp != null)
+                        {
+                            string trxId = paymentResp.OrderPayments[0].TransactionId;
+                            o.TransactionCode = trxId;
+                        }
+                    });
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
@@ -192,7 +207,9 @@ namespace IntegracionPrestashopLib.Operations
                         if (deliveryAddressResp != null)
                         {
                             var deliveryAddress = deliveryAddressResp.Address;
+                            o.Despacho.EsRetiroEnTienda = deliveryAddress.Alias == "Pickup at Store";
                             o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
+                            o.Despacho.Alias = deliveryAddress.Alias;
                             o.Despacho.Direccion.AddressCity = deliveryAddress.Ciudad;
                             o.Despacho.Direccion.AddressStreet = deliveryAddress.Direccion1;
 
@@ -206,6 +223,7 @@ namespace IntegracionPrestashopLib.Operations
                                 if (stateResp != null)
                                     o.Despacho.Direccion.AddressCounty = GetStringDecimalFromHexa(stateResp.State.StateCode);
                             });
+
                             Task tCustomDel = Task.Run(() =>
                             {
                                 var customerDeliveryResp = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl);
@@ -217,12 +235,20 @@ namespace IntegracionPrestashopLib.Operations
                             });
                             tState.Wait();
                             tCustomDel.Wait();
+
                         }
                     });
                     tEstado.Wait();
                     tCurrency.Wait();
                     tInvoiceAdd.Wait();
                     tDeliveryAddress.Wait();
+                    tCustomer.Wait();
+
+                    if (o.Despacho.EsRetiroEnTienda)
+                    {
+                        o.Despacho.ContactEmail = o.CustomerEmail;
+                        o.Despacho.ContactTelephoneNumber = o.Facturacion.PhoneNumber;
+                    }
                 });
 
                 var ordenes = new Schema.dto.OrdenesResponse();

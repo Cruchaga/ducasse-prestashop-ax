@@ -15,6 +15,10 @@ namespace IntegracionPrestashopLib.Schema.PS
         [JsonProperty("date_add")]
         public DateTime DateAdd { get; set; }
 
+        [XmlElement("reference")]
+        [JsonProperty("reference")]
+        public String Referencia { get; set; } 
+
         public String Payment { get; set; }         //Metodo de pago
 
         [JsonProperty("id_cart")]
@@ -53,6 +57,10 @@ namespace IntegracionPrestashopLib.Schema.PS
         [JsonProperty("total_shipping")]
         public String TotalShipping { get; set; }
 
+        [XmlElement("total_shipping_tax_excl")]
+        [JsonProperty("total_shipping_tax_excl")]
+        public String NetShipping { get; internal set; }
+
         [XmlElement("total_paid_tax_incl")]
         [JsonProperty("total_paid_tax_incl")]
         public String TotalFinal { get; set; }
@@ -66,6 +74,5 @@ namespace IntegracionPrestashopLib.Schema.PS
         public ProductosAsociados Asociados { get; set; }
 
         public String Json { get; set; }
-
     }
 }

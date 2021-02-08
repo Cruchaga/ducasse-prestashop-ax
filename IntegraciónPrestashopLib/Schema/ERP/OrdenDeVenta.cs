@@ -18,12 +18,15 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public Facturacion Facturacion { get; set; }
         public Despacho Despacho { get; set; }
         public String PaymMode { get; set; }
+        public String Referencia { get; set; }
+        public String TransactionCode { get; set; }
         public Boolean Factura { get; set; }
         public Decimal TotalWeight { get; set; }
         internal String CurrencyId { get; set; }
         public String CurrencyCode { get; set; }
         public Decimal TotalNetAmount { get; set; }
         public Decimal TotalShippingAmount { get; set; }
+        public Decimal NetShippingAmount { get; set; }
         public Decimal TaxAmount { get; set; }
         public Decimal TotalAmount { get; set; }
         public DetalleDeVenta DetalleDeVentas { get; set; }

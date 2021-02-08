@@ -12,5 +12,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public String LiteralBusiness { get; set; }
         public Direccion Direccion { get; set; }
         public String EmailInvoice { get; set; }
+        public string PhoneNumber { get; set; }
     }
 }

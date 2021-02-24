@@ -37,9 +37,9 @@ namespace IntegracionEnviame.API
                             Packages = envio.Orden.CantidadBultos,
                             Description = envio.Orden.DescripcionContenido,
                             PrestashopOrderId = envio.Orden.IdReferencia,
-                            TotalPrice = Convert.ToInt32(envio.Orden.PesoTotal),
-                            Weight = envio.Orden.PesoTotal.ToString("").Replace(",", "."),
-                            Volume = envio.Orden.VolumenTotal.ToString("").Replace(",", "."),
+                            TotalPrice = Convert.ToInt32(envio.Orden.Precio),
+                            Weight = envio.Orden.Get_PesoTotal(),
+                            Volume = envio.Orden.Get_VolumenTotal(),
                             Type = "delivery"
                         },
                         ShippingOrigin = new ShippingOrigin
@@ -80,8 +80,8 @@ namespace IntegracionEnviame.API
                     return new CrearEnvioResponse
                     {
                         Creado = true,
-                        EtiquetaPdf = deliveryResponse.Label.Pdf,
-                        EtiquetaZebra = deliveryResponse.Label.Zpl.Raw,
+                        EtiquetaPdf = deliveryResponse.GetEtiquetaPdf(),
+                        EtiquetaZebra = deliveryResponse.GetEtiquetaZebra(),
                         Carrier = deliveryResponse.Carrier,
                         Identifier = deliveryResponse.identifier,
                         TrackingNumber = deliveryResponse.TrackingNumber,

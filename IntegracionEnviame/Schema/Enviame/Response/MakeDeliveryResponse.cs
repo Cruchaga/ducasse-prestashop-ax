@@ -27,6 +27,15 @@ namespace IntegracionEnviame.Schema.Response
 
         public Link[] Links { get; set; }
 
+        internal String GetEtiquetaZebra()
+        {
+            return (this.Label != null && this.Label.Zpl != null) ? this.Label.Zpl.Raw : "";
+        }
+
+        internal String GetEtiquetaPdf()
+        {
+            return (this.Label != null ) ? this.Label.Pdf : "";
+        }
     }
 
     public class Link

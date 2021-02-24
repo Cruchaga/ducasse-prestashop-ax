@@ -30,5 +30,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public Decimal TaxAmount { get; set; }
         public Decimal TotalAmount { get; set; }
         public DetalleDeVenta DetalleDeVentas { get; set; }
+        public Comentarios Mensajes { get; internal set; }
     }
 }

@@ -56,12 +56,15 @@
     <Compile Include="Bussiness\Util\HttpRequestFunctions.cs" />
     <Compile Include="Schema\Dictionary\IntegracionErrorCode.cs" />
     <Compile Include="Schema\Dictionary\IntegracionOrdenEstados.cs" />
+    <Compile Include="Schema\ERP\Comentario.cs" />
+    <Compile Include="Schema\ERP\Comentarios.cs" />
     <Compile Include="Schema\ERP\Inventario.cs" />
     <Compile Include="Schema\ERP\Tracking.cs" />
     <Compile Include="Schema\PS\Address.cs" />
     <Compile Include="Schema\PS\Country.cs" />
     <Compile Include="Schema\PS\Currency.cs" />
     <Compile Include="Schema\PS\Estado.cs" />
+    <Compile Include="Schema\PS\Message.cs" />
     <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
     <Compile Include="Schema\PS\Payment.cs" />
     <Compile Include="Schema\PS\ProductToUpdate.cs" />
@@ -94,6 +97,7 @@
     <Compile Include="Schema\PS\Dimension.cs" />
     <Compile Include="Schema\PS\OrdenDeCompra.cs" />
     <Compile Include="Schema\PS\Responses\AddressResponse.cs" />
+    <Compile Include="Schema\PS\Responses\MessageResponse.cs" />
     <Compile Include="Schema\PS\Responses\OrdenesResponse.cs" />
     <Compile Include="Schema\PS\Producto.cs" />
     <Compile Include="Schema\PS\ProductosAsociados.cs" />

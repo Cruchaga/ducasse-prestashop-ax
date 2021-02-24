@@ -23,6 +23,7 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
         private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
         private PSRecursoClient<Payment, PaymentsResponse> psPayment = new PSRecursoClient<Payment, PaymentsResponse>();
+        private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>();
         private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>();
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
@@ -238,6 +239,22 @@ namespace IntegracionPrestashopLib.Operations
 
                         }
                     });
+
+                    Task tComentario = Task.Run(() =>
+                    {
+                        var comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full");
+                        if(comentariosResponse != null)
+                        {
+                            o.Mensajes = new Comentarios(
+                                            (from m in comentariosResponse.OrderPayments
+                                             select new Comentario
+                                             {
+                                                 Msg = m.Msg,
+                                                 FechaComentario = m.fechaHora
+                                             }).ToList());
+                        }
+                    });
+                    tComentario.Wait();
                     tEstado.Wait();
                     tCurrency.Wait();
                     tInvoiceAdd.Wait();

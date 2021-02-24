@@ -28,8 +28,24 @@ namespace IntegracionEnviame.Schema.Requests
         public String DescripcionContenido { get; set; }
         public String IdReferencia { get; set; }
         public int Precio { get; set; }
-        public Decimal PesoTotal { get; set; }
-        public Decimal VolumenTotal { get; set; }
+        private String pesoTotal;
+        public String Get_PesoTotal()
+        {
+            return pesoTotal;
+        }
+        public void Set_PesoTotal(int parteEntera, int parteDecimal)
+        {
+            pesoTotal = $"{parteEntera}.{parteDecimal}";
+        }
+        private String volumenTotal;
+        public String Get_VolumenTotal()
+        {
+            return volumenTotal;
+        }
+        public void Set_VolumenTotal(int parteEntera, int parteDecimal)
+        {
+            volumenTotal = $"{parteEntera}.{parteDecimal}";
+        }
         public String CodBodegaOrigen { get; set; }
 
     }

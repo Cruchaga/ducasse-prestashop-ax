@@ -10,6 +10,7 @@ namespace IntegracionEnviame.Schema.Requests
         public Orden Orden { get; set; }
         public Destino Destino { get; set; }
         public String Carrier { get; set; }
+        public String CarrierService { get; set; }
     }
 
     public class Destino

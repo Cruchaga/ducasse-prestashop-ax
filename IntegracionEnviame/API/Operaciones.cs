@@ -67,7 +67,7 @@ namespace IntegracionEnviame.API
                         Carrier = new Schema.Request.Carrier
                         {
                             Code = envio.Carrier,
-                            Service = "",
+                            Service = envio.CarrierService,
                             TrackingNumber = ""
                         }
                     });

@@ -57,6 +57,19 @@ namespace IntegracionPrestashopLib.Bussiness.Util
             prodOut.UrlAmigableString = prodIn.NameAlias;
         }
 
+        internal static void parseERPProdFromPS(Schema.PS.Producto prodIn, ref Schema.ERP.Producto prodOut)
+        {
+            prodOut.GrossHeight = decimal.Parse(prodIn.Alto.ToString().Replace(".", ","));
+            prodOut.GrossWidth = decimal.Parse(prodIn.Ancho.ToString().Replace(".", ","));
+            prodOut.GrossDepth = decimal.Parse(prodIn.Profundidad.ToString().Replace(".", ","));
+            prodOut.ItemBarCode = prodIn.CodeBarEan13;
+            prodOut.SalesPrice = decimal.Parse(prodIn.Precio.ToString().Replace(".", ","));
+            prodOut.ItemId_InventDimId = prodIn.Reference;
+            prodOut.NetWeight = decimal.Parse(prodIn.Weight.ToString().Replace(".", ","));
+            prodOut.ItemTxt = prodIn.DescriptionString;
+            prodOut.ItemName = prodIn.NameString;
+            prodOut.NameAlias = prodIn.ShortDescriptionString;
+        }
 
         public Schema.ERP.OrdenDeVenta GetOVFromPSOC(Schema.PS.OrdenDeCompra orden)
         {

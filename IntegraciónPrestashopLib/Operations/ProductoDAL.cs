@@ -21,6 +21,7 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse> psProducto = new PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse>();
         private PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSStock = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>();
 
+
         public ProductoDAL(String apiKey, String prestashopUrlBase)
         {
             this.apiKey = apiKey;
@@ -75,7 +76,25 @@ namespace IntegracionPrestashopLib.Operations
             }
         }
 
-       public UpdateResponse Merge(Producto producto)
+        public object GetProducto(string itemId_InventDimId)
+        {
+            var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full");
+            if (prodResult == null || prodResult.products == null)
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                    Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. Objeto prestashop: {psProducto.getJson(itemId_InventDimId)}"
+                };
+            }
+            var prod = (Schema.PS.Producto)prodResult.products[0];
+            var prodERP = new Producto();
+            Parser.parseERPProdFromPS(prod, ref prodERP);
+            return prodERP;
+        }
+
+        private UpdateResponse Merge(Producto producto)
         {
             try
             {
@@ -93,6 +112,41 @@ namespace IntegracionPrestashopLib.Operations
                 Parser.parsePSProdFromERP(producto, ref prod);
 
                 return PSProductoClient.UpdateProduct((Schema.PS.ProductToUpdate)prod, apiKey, baseUrl);
+            }catch(Exception e)
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = $"No se logró actualizar el producto : {e.Message} {Environment.NewLine} StackTrace: {e.StackTrace}"
+                };
+            }
+        }
+
+        public UpdateResponse UpdatePrice(String itemId_InventDimId, decimal ratio, decimal netPrice)
+        {
+             try
+            {
+                var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full");
+                if (prodResult == null || prodResult.products == null)
+                {
+                    return new UpdateResponse
+                    {
+                        Actualizado = false,
+                        ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                        Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. Objeto prestashop: {psProducto.getJson(itemId_InventDimId)}"
+                    };
+                }
+                var prod = (Schema.PS.Producto)prodResult.products[0];
+                var urlPrice = $"{baseUrl.Replace("api/", "WS/price.php")}";
+                var parametros = new Dictionary<String, String>();
+                parametros.Add("price", netPrice.ToString());
+                parametros.Add("ratio", ratio.ToString());
+                parametros.Add("id_product", prod.ProductId.ToString());
+                decimal signature = ((netPrice + 1) * 7) + ((ratio + 1) * 11) + (prod.ProductId * 17);
+                parametros.Add("signature", signature.ToString());
+
+                return PSProductoClient.UpdatePrice(urlPrice, parametros);
             }catch(Exception e)
             {
                 return new UpdateResponse

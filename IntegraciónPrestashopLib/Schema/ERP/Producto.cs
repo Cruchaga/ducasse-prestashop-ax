@@ -30,7 +30,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
         /*
          * Precio venta
          */
-        public Int64 SalesPrice { get; set; }
+        public Decimal SalesPrice { get; set; }
         /*
          * Unidad de venta
          */

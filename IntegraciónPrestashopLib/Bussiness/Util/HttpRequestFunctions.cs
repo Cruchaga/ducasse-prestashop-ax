@@ -54,5 +54,23 @@ namespace IntegracionPrestashopLib.Bussiness.Util
             return response;
         }
 
+
+        internal static string Request(string url, string xmlBody, string method)
+        {
+            string response = "";
+            const SslProtocols _Tls12 = (SslProtocols)0x00000C00;
+            const SecurityProtocolType Tls12 = (SecurityProtocolType)_Tls12;
+            ServicePointManager.SecurityProtocol = Tls12;
+
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.ContentType = "application/xml";
+            req.Method = method;
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            var sr = new System.IO.StreamReader(resp.GetResponseStream());
+            response = sr.ReadToEnd();
+            sr.Close();
+            resp.Close();
+            return response;
+        }
     }
 }

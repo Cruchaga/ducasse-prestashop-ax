@@ -5,9 +5,11 @@ using IntegracionPrestashopLib.Schema.PS.Request;
 using IntegracionPrestashopLib.Schema.PS.Responses;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Authentication;
+using System.Text;
 
 namespace IntegracionPrestashopLib.Bussiness.Clientes
 {
@@ -97,6 +99,67 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                     Actualizado = false,
                     ErrorCode = IntegracionErrorCode.UNCONTROLATED,
                     Error = e.Message
+                };
+            }
+        }
+
+        internal static UpdateResponse UpdatePrice(String prestashopUrl, Dictionary<String, String> parametros)
+        {
+
+            string method = "GET";
+            try
+            {
+                StringBuilder sb = new StringBuilder(prestashopUrl);
+                int count = 0;
+                foreach(var dic in parametros)
+                {
+                    if (count == 0)
+                        sb.Append("?");
+                    else
+                        sb.Append("&");
+
+                    sb.Append($"{dic.Key}={dic.Value}");
+                    count++;
+                }
+                string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
+                if (response == "OK\r\n")
+                {
+
+                    return new UpdateResponse
+                    {
+                        Actualizado = true
+                    };
+                }
+                else
+                {
+                    return new UpdateResponse
+                    {
+                        Actualizado = false,
+                        Error = response,
+                        ErrorCode = IntegracionErrorCode.PRESTASHOP_INTERNAL_ERROR
+                    };
+                }
+            }
+            catch (WebException wex)
+            {
+                var sr = new StreamReader(wex.Response.GetResponseStream());
+                var pageContent = sr.ReadToEnd();
+                sr.Close();
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    Error = pageContent,
+                    ErrorCode = IntegracionErrorCode.PRESTASHOP_INTERNAL_ERROR
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Excepcion: {e.Message}");
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = $"Error: {e.Message} {Environment.NewLine} {e.StackTrace}"
                 };
             }
         }

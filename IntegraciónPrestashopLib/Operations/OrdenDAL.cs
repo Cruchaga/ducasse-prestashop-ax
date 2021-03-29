@@ -17,14 +17,14 @@ namespace IntegracionPrestashopLib.Operations
         private String apiKey;
         private String baseUrl;
 
-        private PSRecursoClient<Estado, EstadoResponse> pSEstado = new PSRecursoClient<Estado, EstadoResponse>();
-        private PSRecursoClient<Customer, CustomerResponse> psCustomer = new PSRecursoClient<Customer, CustomerResponse>();
-        private PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>();
-        private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>();
-        private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>();
-        private PSRecursoClient<Payment, PaymentsResponse> psPayment = new PSRecursoClient<Payment, PaymentsResponse>();
-        private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>();
-        private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>();
+        private PSRecursoClient<Estado, EstadoResponse> pSEstado = new PSRecursoClient<Estado, EstadoResponse>("IntegracionPrestashopLib.Schema.PS.Responses.EstadoResponse");
+        private PSRecursoClient<Customer, CustomerResponse> psCustomer = new PSRecursoClient<Customer, CustomerResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CustomerResponse");
+        private PSRecursoClient<Address, AddressResponse> pSDelivery = new PSRecursoClient<Address, AddressResponse>("IntegracionPrestashopLib.Schema.PS.Responses.AddressResponse");
+        private PSRecursoClient<State, StateResponse> psState = new PSRecursoClient<State, StateResponse>("IntegracionPrestashopLib.Schema.PS.Responses.StateResponse");
+        private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CurrencyResponse");
+        private PSRecursoClient<Payment, PaymentsResponse> psPayment = new PSRecursoClient<Payment, PaymentsResponse>("IntegracionPrestashopLib.Schema.PS.Responses.PaymentsResponse");
+        private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>("IntegracionPrestashopLib.Schema.PS.Responses.MessageResponse");
+        private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>("IntegracionPrestashopLib.Schema.PS.tDoc");
 
         public OrdenDAL(String apiKey, String prestashopUrlBase)
         {
@@ -243,7 +243,7 @@ namespace IntegracionPrestashopLib.Operations
                     Task tComentario = Task.Run(() =>
                     {
                         var comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full");
-                        if(comentariosResponse != null)
+                        if (comentariosResponse != null && comentariosResponse.OrderPayments != null)
                         {
                             o.Mensajes = new Comentarios(
                                             (from m in comentariosResponse.OrderPayments
@@ -253,6 +253,11 @@ namespace IntegracionPrestashopLib.Operations
                                                  FechaComentario = m.fechaHora
                                              }).ToList());
                         }
+                        else
+                            o.Mensajes = new Comentarios
+                            {
+                                Mensajes = new List<Comentario>()
+                            };
                     });
                     tComentario.Wait();
                     tEstado.Wait();
@@ -321,7 +326,8 @@ namespace IntegracionPrestashopLib.Operations
             {
                 EmployeeId = 2,
                 EstadoId = tracking.NuevoEstadoId,
-                OrderId = tracking.OrdenId
+                OrderId = tracking.OrdenId,
+                Informar = true
             }, apiKey, baseUrl);
 
         }

@@ -16,5 +16,8 @@ namespace IntegracionPrestashopLib.Schema.PS
 
         [XmlElement("id_order")]
         public int OrderId { get; set; }
+
+        [XmlIgnore]
+        public Boolean Informar;
     }
 }

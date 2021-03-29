@@ -56,8 +56,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         internal static UpdateResponse UpdateTracking(OrderHistory orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
-
-            String url = $"{prestashopUrlBase}order_histories/{orden.OrderId}";
+            String sendmail = orden.Informar ? "1" : "0";
+            String url = $"{prestashopUrlBase}order_histories/{orden.OrderId}?sendemail={sendmail}";
             string method = "POST";
 
             var obj = new TrackingRequest

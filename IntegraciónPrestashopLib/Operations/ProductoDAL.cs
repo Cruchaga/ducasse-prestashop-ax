@@ -18,8 +18,8 @@ namespace IntegracionPrestashopLib.Operations
         private String apiKey;
         private String baseUrl;
 
-        private PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse> psProducto = new PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse>();
-        private PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSStock = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>();
+        private PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse> psProducto = new PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse>("IntegracionPrestashopLib.Schema.PS.Responses.ProductQueryResponse");
+        private PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSStock = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>("IntegracionPrestashopLib.Schema.PS.Responses.StockAvailableRepsonse");
 
 
         public ProductoDAL(String apiKey, String prestashopUrlBase)
@@ -123,7 +123,7 @@ namespace IntegracionPrestashopLib.Operations
             }
         }
 
-        public UpdateResponse UpdatePrice(String itemId_InventDimId, decimal ratio, decimal netPrice)
+        public UpdateResponse UpdatePrice(String itemId_InventDimId,  decimal netPrice)
         {
              try
             {
@@ -140,11 +140,10 @@ namespace IntegracionPrestashopLib.Operations
                 var prod = (Schema.PS.Producto)prodResult.products[0];
                 var urlPrice = $"{baseUrl.Replace("api/", "WS/price.php")}";
                 var parametros = new Dictionary<String, String>();
-                parametros.Add("price", netPrice.ToString());
-                parametros.Add("ratio", ratio.ToString());
+                parametros.Add("price", netPrice.ToString().Replace(",","."));
                 parametros.Add("id_product", prod.ProductId.ToString());
-                decimal signature = ((netPrice + 1) * 7) + ((ratio + 1) * 11) + (prod.ProductId * 17);
-                parametros.Add("signature", signature.ToString());
+                decimal signature = ((netPrice + 1) * 7) + (prod.ProductId * 17);
+                parametros.Add("signature", signature.ToString().Replace(",", "."));
 
                 return PSProductoClient.UpdatePrice(urlPrice, parametros);
             }catch(Exception e)

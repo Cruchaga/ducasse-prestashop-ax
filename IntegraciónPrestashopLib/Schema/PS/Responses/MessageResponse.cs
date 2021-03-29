@@ -12,5 +12,10 @@ namespace IntegracionPrestashopLib.Schema.PS.Responses
         [XmlElement("messages")]
         [JsonProperty("messages")]
         public IList<Message> OrderPayments { get; set; }
+
+        public MessageResponse()
+        {
+
+        }
     }
 }

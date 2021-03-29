@@ -20,6 +20,11 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
     {
         private Hashtable resources;
         private Hashtable jsonResources = new Hashtable();
+        private String finalClass;
+        public PSRecursoClient(String namClass)
+        {
+            this.finalClass = namClass;
+        }
         internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl)
         {
             Stopwatch sw = new Stopwatch();
@@ -98,6 +103,15 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 url = $"{baseUrl}{recurso}?output_format=JSON{filtros}";
                 string s = HttpRequestFunctions.GetRequest(url, base64);
                 s = s == ("0 results\r\n") ? "{}" : s;
+                V inst = (V)Activator.CreateInstance(Type.GetType(finalClass));
+                if(inst.GetType() == typeof(IEnumerable))
+                {
+                    s = s == ("{}") ? "[]" : s;
+                }
+                else
+                {
+                    s = s == ("[]") ? "{}" : s;
+                }
                 V resp = JsonConvert.DeserializeObject<V>(s);
 
                 if (resources == null)

@@ -208,7 +208,7 @@ namespace IntegracionPrestashopLib.Operations
                         if (deliveryAddressResp != null)
                         {
                             var deliveryAddress = deliveryAddressResp.Address;
-                            o.Despacho.EsRetiroEnTienda = deliveryAddress.Alias == "Pickup at Store";
+                            o.Despacho.EsRetiroEnTienda = deliveryAddress.Alias == "Pickup at Store" || deliveryAddress.Alias == "Recogida en tienda";
                             o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
                             o.Despacho.Alias = deliveryAddress.Alias;
                             o.Despacho.Direccion.AddressCity = deliveryAddress.Ciudad;

@@ -233,13 +233,11 @@ namespace IntegracionEnviame.API
                     var response = EnviameClient.RequestEmpty("GET", url, apiKey, contentType);
                     GetTrackingResponse tracking = Parser.ParseTrackingResponseFromJson(response);
 
-                    return (from t in tracking.Tracking
-                            orderby t.Fecha descending
-                            select new VerTrackingResponse
+                    return (new VerTrackingResponse
                             {
-                                CodigoEstado = t.Code,
-                                Descripcion = t.Comment
-                            }).First();
+                                CodigoEstado = tracking.Status.Code,
+                                Descripcion = tracking.Status.Name
+                            });
                 }
                 else
                 {

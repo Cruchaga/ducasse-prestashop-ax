@@ -78,9 +78,12 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 }
             }catch(WebException e)
             {
-                var sr = new StreamReader(e.Response.GetResponseStream());
-                var pageContent = sr.ReadToEnd();
-                sr.Close();
+                if (e.Response != null)
+                {
+                    var sr = new StreamReader(e.Response.GetResponseStream());
+                    var pageContent = sr.ReadToEnd();
+                    sr.Close();
+                }
             }
             catch (Exception e)
             {

@@ -289,13 +289,8 @@ namespace IntegracionPrestashopLib.Operations
 
         private static string GetStringDecimalFromHexa(String comunaResp)
         {
-            if(comunaResp.Length == 4)
-            {
-                String decimalCode = Convert.ToInt64(comunaResp, 16).ToString();
-                return decimalCode.Length == 4 ? $"0{decimalCode}" : decimalCode;
-            }
-            else
-                return comunaResp;
+            String decimalCode = Convert.ToInt64(comunaResp, 16).ToString();
+            return decimalCode.Length == 4 ? $"0{decimalCode}" : decimalCode;
         }
 
         /**

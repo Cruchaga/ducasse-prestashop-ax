@@ -97,6 +97,7 @@
     <Compile Include="Schema\PS\Dimension.cs" />
     <Compile Include="Schema\PS\OrdenDeCompra.cs" />
     <Compile Include="Schema\PS\Responses\AddressResponse.cs" />
+    <Compile Include="Schema\PS\Responses\InventarioResponse.cs" />
     <Compile Include="Schema\PS\Responses\MessageResponse.cs" />
     <Compile Include="Schema\PS\Responses\OrdenesResponse.cs" />
     <Compile Include="Schema\PS\Producto.cs" />

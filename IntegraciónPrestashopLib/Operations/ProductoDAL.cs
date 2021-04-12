@@ -194,6 +194,56 @@ namespace IntegracionPrestashopLib.Operations
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
 
+        public InventarioResponse GetStock(String itemId_InventDimId)
+        {
+            try
+            {
+                var prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full");
+                if (prod == null || prod.products == null)
+                {
+                    return new InventarioResponse
+                    {
+                        HayError = false,
+                        ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                        Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. respuesta de PS: {psProducto.getJson(itemId_InventDimId)}",
+                        Inventario = null
+                    };
+                }
+                int prodID = prod.products[0].ProductId;
+                var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]");
+                int stockSalida = 0;
+                if (int.TryParse(stock.Stock[0].Stock, out stockSalida)) {
+                    return new InventarioResponse
+                    {
+                        HayError = false,
+                        Inventario = new Inventario
+                        {
+                            Stock = stockSalida,
+                            ItemId_InventDimId = itemId_InventDimId
+                        }
+                    };
+                }
+                else
+                {
+                    return new InventarioResponse
+                    {
+                        HayError = true,
+                        Error = $"El stock registrado no es un número entero. [Valor = '{stock.Stock[0].Stock}']",
+                        ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                return new InventarioResponse
+                {
+                    HayError = true,
+                    ErrorCode = IntegracionErrorCode.UNCONTROLATED,
+                    Error = $"No se logró obtener el stock : {e.Message} {Environment.NewLine} StackTrace: {e.StackTrace}"
+                };
+            }
+        }
+
         public String TestDateTime(DateTime date)
         {
             return $"La fecha es: {date.ToString("dd 'de' MMMM 'de' yyyy con 'hora' HH:mm:ss FFF")}";

@@ -87,7 +87,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (Exception e)
             {
-                throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64}", e);
+                throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64} [{e.Message}:{Environment.NewLine}{e.StackTrace}]", e);
             }
         }
 
@@ -133,7 +133,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (Exception e)
             {
-                throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64}", e);
+                throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64} [{e.Message}:{Environment.NewLine}{e.StackTrace}]", e);
             }
         }
 

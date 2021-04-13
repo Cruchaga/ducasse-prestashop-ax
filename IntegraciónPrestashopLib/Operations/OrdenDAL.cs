@@ -16,6 +16,7 @@ namespace IntegracionPrestashopLib.Operations
     {
         private String apiKey;
         private String baseUrl;
+        private int userId;
 
         private PSRecursoClient<Estado, EstadoResponse> pSEstado = new PSRecursoClient<Estado, EstadoResponse>("IntegracionPrestashopLib.Schema.PS.Responses.EstadoResponse");
         private PSRecursoClient<Customer, CustomerResponse> psCustomer = new PSRecursoClient<Customer, CustomerResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CustomerResponse");
@@ -26,10 +27,11 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>("IntegracionPrestashopLib.Schema.PS.Responses.MessageResponse");
         private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>("IntegracionPrestashopLib.Schema.PS.tDoc");
 
-        public OrdenDAL(String apiKey, String prestashopUrlBase)
+        public OrdenDAL(String apiKey, String prestashopUrlBase, int userId)
         {
             this.apiKey = apiKey;
             this.baseUrl = prestashopUrlBase;
+            this.userId = userId;
         }
         /**
          * <summary>
@@ -152,6 +154,9 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.Direccion.AddressCity = invoiceAddress.Ciudad;
                             o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
                             o.Facturacion.PhoneNumber = invoiceAddress.Phone;
+                            o.Facturacion.CustNameInvoice = invoiceAddress.Company;
+                            o.Facturacion.Rut = invoiceAddress.RutEmpresa;
+                            o.Facturacion.LiteralBusiness = invoiceAddress.Other;
                             Task tState = Task.Run(() =>
                             {
                                 var comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl);
@@ -177,13 +182,7 @@ namespace IntegracionPrestashopLib.Operations
                                 String url = baseUrl.Replace("api", "WS");
 
                                 var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}");
-                                if (document != null)
-                                {
-                                    o.Facturacion.CustNameInvoice = document.RazonSocial;
-                                    o.Facturacion.Rut = document.Rut;
-                                    o.Facturacion.LiteralBusiness = document.Giro;
-                                    o.Factura = document.Tipo == 33;
-                                }
+                                o.Factura = document != null && document.Tipo == 33;
 
                             });
                             tState.Wait();
@@ -316,15 +315,25 @@ namespace IntegracionPrestashopLib.Operations
             //        Error = $"El valor de estado [{tracking.NuevoEstadoId}] no se reconoce. Los valores aceptados son: [{String.Join(",", propList.Select(p => $"{p.GetValue(_type).ToString()}").ToArray<String>())}]"
             //    };
             //}
-
-            return PSOrdenClient.UpdateTracking(new OrderHistory
+            if (this.userId != 0)
             {
-                EmployeeId = 2,
-                EstadoId = tracking.NuevoEstadoId,
-                OrderId = tracking.OrdenId,
-                Informar = true
-            }, apiKey, baseUrl);
-
+                return PSOrdenClient.UpdateTracking(new OrderHistory
+                {
+                    EmployeeId = userId,
+                    EstadoId = tracking.NuevoEstadoId,
+                    OrderId = tracking.OrdenId,
+                    Informar = true
+                }, apiKey, baseUrl);
+            }
+            else
+            {
+                return new UpdateResponse
+                {
+                    Actualizado = false,
+                    Error = $"No se ha identificado el id de usuario [user id = {userId}].",
+                    ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE
+                };
+            }
         }
 
         private static void ValidateEstadoId(int estado, out Type _type, out FieldInfo[] propList, out bool existe)

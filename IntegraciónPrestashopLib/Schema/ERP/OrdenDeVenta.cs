@@ -7,6 +7,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
 {
     public class OrdenDeVenta
     {
+
         public Int64 SalesIdPrestaShop { get; set; }
         internal String EstadoId { get; set; }
         internal String CustomerId { get; set; }
@@ -19,7 +20,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public Despacho Despacho { get; set; }
         public String PaymMode { get; set; }
         public String Referencia { get; set; }
-        public String TransactionCode { get; set; }
+        public TransbankInfo TransactionInfo { get; set; }
         public Boolean Factura { get; set; }
         public Decimal TotalWeight { get; set; }
         internal String CurrencyId { get; set; }

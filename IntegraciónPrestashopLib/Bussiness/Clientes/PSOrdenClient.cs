@@ -53,6 +53,29 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
         }
 
+        internal static PaymentResponse GetOrderPayment(String prestashopUrl, Dictionary<String, String> parametros)
+        {
+
+            string method = "GET";
+
+            StringBuilder sb = new StringBuilder(prestashopUrl);
+            int count = 0;
+            foreach(var dic in parametros)
+            {
+                if (count == 0)
+                    sb.Append("?");
+                else
+                    sb.Append("&");
+
+                sb.Append($"{dic.Key}={dic.Value}");
+                count++;
+            }
+            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
+            var payment = JsonConvert.DeserializeObject<PaymentResponse>(response);
+            return payment;
+            
+        }
+
         internal static UpdateResponse UpdateTracking(OrderHistory orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));

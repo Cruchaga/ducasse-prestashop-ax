@@ -21,7 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -60,13 +60,16 @@
     <Compile Include="Schema\ERP\Comentarios.cs" />
     <Compile Include="Schema\ERP\Inventario.cs" />
     <Compile Include="Schema\ERP\Tracking.cs" />
+    <Compile Include="Schema\ERP\TransbankInfo.cs" />
     <Compile Include="Schema\PS\Address.cs" />
+    <Compile Include="Schema\PS\TbkCardDetail.cs" />
     <Compile Include="Schema\PS\Country.cs" />
     <Compile Include="Schema\PS\Currency.cs" />
     <Compile Include="Schema\PS\Estado.cs" />
     <Compile Include="Schema\PS\Message.cs" />
     <Compile Include="Schema\PS\OrdenDeCompraXML.cs" />
     <Compile Include="Schema\PS\Payment.cs" />
+    <Compile Include="Schema\PS\PaymentResponse.cs" />
     <Compile Include="Schema\PS\ProductToUpdate.cs" />
     <Compile Include="Schema\PS\Request\ProductRequest.cs" />
     <Compile Include="Schema\PS\Request\ProductUpdateRequest.cs" />
@@ -113,6 +116,7 @@
     <Compile Include="Schema\PS\StockAvailable.cs" />
     <Compile Include="Schema\PS\tDoc.cs" />
     <Compile Include="Schema\PS\Tupla.cs" />
+    <Compile Include="Schema\PS\WPPayment.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />

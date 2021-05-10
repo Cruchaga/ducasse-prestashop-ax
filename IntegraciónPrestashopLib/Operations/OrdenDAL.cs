@@ -154,7 +154,7 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.Direccion.AddressCity = invoiceAddress.Ciudad;
                             o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
                             o.Facturacion.PhoneNumber = invoiceAddress.Phone;
-                            o.Facturacion.CustNameInvoice = invoiceAddress.Company;
+                            o.Facturacion.CustNameInvoice = invoiceAddress.Company == "" ? $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}" : invoiceAddress.Company;
                             o.Facturacion.Rut = invoiceAddress.RutEmpresa;
                             o.Facturacion.LiteralBusiness = invoiceAddress.Other;
                             Task tState = Task.Run(() =>
@@ -192,12 +192,47 @@ namespace IntegracionPrestashopLib.Operations
                     });
                     Task tPayments = Task.Run(() =>
                     {
-                        var paymentResp = psPayment.GetRecursoWithFilter("order_payments", o.Referencia, apiKey, baseUrl, $"&filter[order_reference]=[{o.Referencia}]&display=full");
+                        var urlPayment = $"{baseUrl.Replace("api/", "WS/webpayinfo.php")}";
 
-                        if (paymentResp != null)
-                        {
-                            string trxId = paymentResp.OrderPayments[0].TransactionId;
-                            o.TransactionCode = trxId;
+                        var parametros = new Dictionary<String, String>();
+                        parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
+                        parametros.Add("cart_id", o.IdCart);
+
+                        int idCart = 0;
+                        if (int.TryParse(o.IdCart, out idCart)) {
+                            decimal signature = ((o.SalesIdPrestaShop + 3) * 29) + (idCart * 17);
+                            parametros.Add("signature", signature.ToString().Replace(",", "."));
+                            var payment = PSOrdenClient.GetOrderPayment(urlPayment, parametros);
+
+                            if (payment != null)
+                            {
+                                var tbkInfo = payment.transbank_response;
+
+                                o.TransactionInfo = new TransbankInfo
+                                {
+                                    Token = payment.token,
+                                    AccountingDate = tbkInfo.accountingDate,
+                                    Amount = tbkInfo.amount,
+                                    AuthorizationCode = tbkInfo.authorizationCode,
+                                    Balance = tbkInfo.balance == null ? "" : tbkInfo.balance.ToString(),
+                                    BuyOrder = tbkInfo.buyOrder,
+                                    Card_number = tbkInfo.cardDetail.card_number,
+                                    InstallmentsAmount = tbkInfo.installmentsAmount == null ? "" : tbkInfo.installmentsAmount.ToString(),
+                                    InstallmentsNumber = tbkInfo.installmentsNumber == null ? "" : tbkInfo.installmentsNumber.ToString(),
+                                    PaymentTypeCode = tbkInfo.paymentTypeCode,
+                                    ResponseCode = tbkInfo.responseCode,
+                                    SessionId = tbkInfo.sessionId,
+                                    Status = tbkInfo.status,
+                                    TransactionDate = tbkInfo.transactionDate,
+                                    Vci = tbkInfo.vci
+
+                                };
+
+                            }
+                            else
+                            {
+                                o.TransactionInfo = new TransbankInfo();
+                            }
                         }
                     });
 

@@ -13,6 +13,7 @@ namespace IntegracionPrestashopLib.Schema.dto
         public String JSon { get; set; }
         public int ErrorCode { get; set; }
         public String  Error { get; set; }
+        public String Traza { get; set; }
 
         public OrdenesResponse()
         {

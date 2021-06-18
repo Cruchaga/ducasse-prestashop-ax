@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace IntegracionPrestashopLib.Operations
@@ -43,8 +44,10 @@ namespace IntegracionPrestashopLib.Operations
          */
         public Schema.dto.OrdenesResponse GetOrdenes(DateTime fechaInicio, DateTime fechaFin)
         {
+            StringBuilder sbTraza = new StringBuilder();
             try
             {
+                sbTraza.Append($"Iniciando obtener ordenes con url =[{baseUrl}] apiKey= [{apiKey}] y userId = [{userId}]{Environment.NewLine}");
                 if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(baseUrl))
                 {
                     return new Schema.dto.OrdenesResponse
@@ -56,8 +59,12 @@ namespace IntegracionPrestashopLib.Operations
 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                var response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl);
+                var response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl, ref sbTraza);
                 var ordenesList = response.Orders;
+                if (ordenesList.Count > 0)
+                    sbTraza.Append($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");
+                else
+                    sbTraza.Append($"No se encontraron ordenes{Environment.NewLine}");
                 sw.Stop();
                 Console.WriteLine($"Tiempo Ordenes: {sw.Elapsed.TotalMilliseconds} ms");
                 Console.WriteLine("--------------");
@@ -99,8 +106,8 @@ namespace IntegracionPrestashopLib.Operations
                                                                           ItemId = d.ProductId,
                                                                           Sku = d.Reference,
                                                                           SalesLineQty = Decimal.Parse(d.Cantidad.Replace(".", ",")),
-                                                                          SalesLineNetPrice = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")), //TODO: agregar dcto
-                                                                          SalesLinePrice = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")),//TODO: agregar dcto
+                                                                          SalesLineNetPrice = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")), 
+                                                                          SalesLinePrice = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")),
                                                                           SalesLineNetTotalAmount = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ",")),
                                                                           SalesLineTotal = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ","))
                                                                       }).ToList()),
@@ -113,7 +120,8 @@ namespace IntegracionPrestashopLib.Operations
                     Customer customer;
                     Task tEstado = Task.Run(() =>
                     {
-                        var estadoResp = pSEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl);
+                        sbTraza.Append($"Iniciando búsqueda de estado para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var estadoResp = pSEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl, ref sbTraza);
                         if (estadoResp != null)
                         {
                             var estado = estadoResp.estado;
@@ -123,7 +131,8 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tCustomer = Task.Run(() =>
                     {
-                        var customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl);
+                        sbTraza.Append($"Iniciando búsqueda de cliente para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl, ref sbTraza);
                         if (customerResp != null)
                         {
                             customer = customerResp.Clientes;
@@ -134,7 +143,8 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tCurrency = Task.Run(() =>
                     {
-                        var currencyRep = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl);
+                        sbTraza.Append($"Iniciando búsqueda de currency para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var currencyRep = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl, ref sbTraza);
                         if (currencyRep != null)
                         {
                             var currency = currencyRep.Currency;
@@ -147,7 +157,8 @@ namespace IntegracionPrestashopLib.Operations
                     });
                     Task tInvoiceAdd = Task.Run(() =>
                     {
-                        var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl);
+                        sbTraza.Append($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl, ref sbTraza);
                         if (invoiceAddressResp != null)
                         {
                             var invoiceAddress = invoiceAddressResp.Address;
@@ -159,7 +170,8 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.LiteralBusiness = invoiceAddress.Other;
                             Task tState = Task.Run(() =>
                             {
-                                var comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl);
+                                sbTraza.Append($"Iniciando búsqueda de estado para dirección {o.Facturacion.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                                var comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl, ref sbTraza);
 
                                 if (comunaResp != null)
                                 {
@@ -170,7 +182,8 @@ namespace IntegracionPrestashopLib.Operations
 
                             Task tCustomDel = Task.Run(() =>
                             {
-                                var customerDeliveryResp = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl);
+                                sbTraza.Append($"Iniciando búsqueda de cliente en direcccion {o.Facturacion.Direccion.AddressId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                                var customerDeliveryResp = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl, ref sbTraza);
                                 if (customerDeliveryResp != null)
                                 {
                                     var customerDelivery = customerDeliveryResp.Clientes;
@@ -179,9 +192,10 @@ namespace IntegracionPrestashopLib.Operations
                             });
                             Task tDoc = Task.Run(() =>
                             {
+                                sbTraza.Append($"Iniciando búsqueda de datos facturacion para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                                 String url = baseUrl.Replace("api", "WS");
 
-                                var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}");
+                                var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}", ref sbTraza);
                                 o.Factura = document != null && document.Tipo == 33;
 
                             });
@@ -192,6 +206,7 @@ namespace IntegracionPrestashopLib.Operations
                     });
                     Task tPayments = Task.Run(() =>
                     {
+                        sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                         var urlPayment = $"{baseUrl.Replace("api/", "WS/webpayinfo.php")}";
 
                         var parametros = new Dictionary<String, String>();
@@ -238,7 +253,8 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
-                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.Direccion.AddressId, apiKey, baseUrl);
+                        sbTraza.Append($"Iniciando búsqueda de direccion de despacho para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var deliveryAddressResp = pSDelivery.GetRecurso("addresses", o.Despacho.Direccion.AddressId, apiKey, baseUrl, ref sbTraza);
                         if (deliveryAddressResp != null)
                         {
                             var deliveryAddress = deliveryAddressResp.Address;
@@ -254,14 +270,16 @@ namespace IntegracionPrestashopLib.Operations
                             o.Despacho.LiteralBusiness = deliveryAddress.Company;
                             Task tState = Task.Run(() =>
                             {
-                                var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl);
+                                sbTraza.Append($"Iniciando búsqueda de comuna para direccion {o.Despacho.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                                var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl, ref sbTraza);
                                 if (stateResp != null)
                                     o.Despacho.Direccion.AddressCounty = GetStringDecimalFromHexa(stateResp.State.StateCode);
                             });
 
                             Task tCustomDel = Task.Run(() =>
                             {
-                                var customerDeliveryResp = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl);
+                                sbTraza.Append($"Iniciando búsqueda de cliente para direccion {o.Despacho.Direccion.AddressId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                                var customerDeliveryResp = psCustomer.GetRecurso("customers", deliveryAddress.CustomerId, apiKey, baseUrl, ref sbTraza);
                                 if (customerDeliveryResp != null)
                                 {
                                     var customerDelivery = customerDeliveryResp.Clientes;
@@ -276,7 +294,8 @@ namespace IntegracionPrestashopLib.Operations
 
                     Task tComentario = Task.Run(() =>
                     {
-                        var comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full");
+                        sbTraza.Append($"Iniciando búsqueda de comentarios para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                        var comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full", ref sbTraza);
                         if (comentariosResponse != null && comentariosResponse.OrderPayments != null)
                         {
                             o.Mensajes = new Comentarios(
@@ -309,14 +328,17 @@ namespace IntegracionPrestashopLib.Operations
 
                 var ordenes = new Schema.dto.OrdenesResponse();
                 ordenes.SetOrdenesDeVenta(resp);
+                ordenes.Traza = sbTraza.ToString();
                 return ordenes;
             }
             catch (Exception e)
             {
+                sbTraza.Append($"Error al obtener ordenes [{e.Message}]{Environment.NewLine}");
                 return new Schema.dto.OrdenesResponse
                 {
                     ErrorCode = IntegracionErrorCode.UNCONTROLATED,
-                    Error = e.Message
+                    Error = e.Message,
+                    Traza = sbTraza.ToString()
                 };
             }
         }

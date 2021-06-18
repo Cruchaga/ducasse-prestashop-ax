@@ -25,36 +25,47 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         {
             this.finalClass = namClass;
         }
-        internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl)
+        internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl, ref StringBuilder sbTraza)
         {
+            sbTraza.Append($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
             Stopwatch sw = new Stopwatch();
             sw.Start();
             if (resources == null)
                 resources = new Hashtable();
             if (resources[recursoId] == null)
-                ObtenerRecurso(recurso, $"/{recursoId}", apiKey, baseUrl, "");
+                ObtenerRecurso(recurso, $"/{recursoId}", apiKey, baseUrl, "", ref sbTraza);
             else
                 Console.WriteLine($"Recurso {recursoId} enconctrado en lista de {recurso} con {resources.Count} recursos guardados");
             sw.Stop();
             Console.WriteLine($"Tiempo {recurso}: {sw.Elapsed.TotalMilliseconds} ms");
+            if (resources[recursoId] == null)
+                sbTraza.Append($"No se encontró recurso {recurso} con id {recursoId} {Environment.NewLine}");
+            else
+                sbTraza.Append($"Retornando {recurso} con id {recursoId} {Environment.NewLine}");
+
             return (V)resources[$"/{recursoId}"];
         }
-        internal V GetRecursoWithFilter(String recurso, String recursoId, String apiKey, String baseUrl, String filtro)
+        internal V GetRecursoWithFilter(String recurso, String recursoId, String apiKey, String baseUrl, String filtro, ref StringBuilder sbTraza)
         {
+            sbTraza.Append($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
             Stopwatch sw = new Stopwatch();
             sw.Start();
             if (resources == null)
                 resources = new Hashtable();
             if (resources[recursoId] == null)
-                ObtenerRecursoWithFilter(recurso, recursoId, apiKey, baseUrl, filtro);
+                ObtenerRecursoWithFilter(recurso, recursoId, apiKey, baseUrl, filtro, ref sbTraza);
             else
                 Console.WriteLine($"Recurso {recursoId} enconctrado en lista de {recurso} con {resources.Count} recursos guardados");
             sw.Stop();
             Console.WriteLine($"Tiempo {recurso}: {sw.Elapsed.TotalMilliseconds} ms");
+            if (resources[recursoId] == null)
+                sbTraza.Append($"No se encontró recurso {recurso} con id {recursoId} {Environment.NewLine}");
+            else
+                sbTraza.Append($"Retornando {recurso} con id {recursoId} {Environment.NewLine}"); 
             return (V)resources[recursoId];
         }
 
-        private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl, String filtros)
+        private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
             String url = $"{baseUrl}{recurso}{recursoId}?output_format=JSON{filtros}";
@@ -78,6 +89,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 }
             }catch(WebException e)
             {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{e.Message}]");
                 if (e.Response != null)
                 {
                     var sr = new StreamReader(e.Response.GetResponseStream());
@@ -87,6 +99,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (Exception e)
             {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{e.Message}]");
                 throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64} [{e.Message}:{Environment.NewLine}{e.StackTrace}]", e);
             }
         }
@@ -96,7 +109,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             return jsonResources[id].ToString();
         }
 
-        private void ObtenerRecursoWithFilter(String recurso, string recursoId, String apiKey, String baseUrl, String filtros)
+        private void ObtenerRecursoWithFilter(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
         {
             String url = "";
             String base64 = "";
@@ -129,10 +142,12 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (TimeoutException t)
             {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{t.Message}]{Environment.NewLine}");
                 throw new Exception($"Timeout detectado al intentar consumir la url {url} con apikey {base64}", t);
             }
             catch (Exception e)
             {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{e.Message}]{Environment.NewLine}");
                 throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64} [{e.Message}:{Environment.NewLine}{e.StackTrace}]", e);
             }
         }

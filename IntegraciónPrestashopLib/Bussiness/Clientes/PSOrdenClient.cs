@@ -21,10 +21,10 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 {
     internal class PSOrdenClient
     {
-        internal static OrdenesResponse GetOrdenes(DateTime fechaIni, DateTime fechaFin, String apiKey, String prestashopUrlBase)
+        internal static OrdenesResponse GetOrdenes(DateTime fechaIni, DateTime fechaFin, String apiKey, String prestashopUrlBase, ref StringBuilder sbTraza)
         {
-
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+            sbTraza.Append($"Consultando ordenes desde {fechaIni.ToString("dd/MM/yyyy HH:mm:ss")} hasta {fechaFin.ToString("dd/MM/yyyy HH:mm:ss")} {Environment.NewLine}");
 
             String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
             
@@ -46,9 +46,11 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             catch (Exception e)
             {
                 Console.WriteLine($"Excepcion: {e.Message}");
+                sbTraza.Append($"Error al obtener ordenes [{e.Message}]{Environment.NewLine}");
                 return new OrdenesResponse
                 {
-                    Orders = new List<OrdenDeCompra>()
+                    Orders = new List<OrdenDeCompra>(),
+                    
                 };
             }
         }

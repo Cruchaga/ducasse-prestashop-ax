@@ -62,6 +62,8 @@
     <Compile Include="Schema\ERP\Tracking.cs" />
     <Compile Include="Schema\ERP\TransbankInfo.cs" />
     <Compile Include="Schema\PS\Address.cs" />
+    <Compile Include="Schema\PS\Combination.cs" />
+    <Compile Include="Schema\PS\Responses\CombinationResponse.cs" />
     <Compile Include="Schema\PS\TbkCardDetail.cs" />
     <Compile Include="Schema\PS\Country.cs" />
     <Compile Include="Schema\PS\Currency.cs" />

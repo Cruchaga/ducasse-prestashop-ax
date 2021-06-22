@@ -61,7 +61,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             if (resources[recursoId] == null)
                 sbTraza.Append($"No se encontró recurso {recurso} con id {recursoId} {Environment.NewLine}");
             else
-                sbTraza.Append($"Retornando {recurso} con id {recursoId} {Environment.NewLine}"); 
+                sbTraza.Append($"Retornando {recurso} con id {recursoId} {Environment.NewLine}");
             return (V)resources[recursoId];
         }
 
@@ -137,6 +137,10 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                     Console.WriteLine($"Agregando {resp.ToString()} [{s}] a lista... pues se encontró vacío = {{{resources[recursoId]}}} ");
                     resources.Add(recursoId, resp);
                     Console.WriteLine($"recurso {recurso} agregado. qty de recursos: {resources.Count}");
+                }
+                if (jsonResources[recursoId] == null)
+                {
+                    jsonResources.Add(recursoId, s);
                 }
 
             }

@@ -231,7 +231,7 @@ namespace IntegracionPrestashopLib.Operations
         {
             var sbTraza = new StringBuilder();
 
-            var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", ref sbTraza);
+            var stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", ref sbTraza);
             stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
@@ -242,20 +242,34 @@ namespace IntegracionPrestashopLib.Operations
             {
                 var sbTraza = new StringBuilder();
                 var prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+
+                StockAvailableRepsonse stock = new StockAvailableRepsonse();
+                int stockSalida = 0;
                 if (prod == null || prod.products == null)
                 {
-                    return new InventarioResponse
+                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+                    if (comb == null || comb.products == null)
                     {
-                        HayError = false,
-                        ErrorCode = IntegracionErrorCode.NOT_FOUND,
-                        Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. respuesta de PS: {psProducto.getJson(itemId_InventDimId)}",
-                        Inventario = null
-                    };
+                        return new InventarioResponse
+                        {
+                            HayError = false,
+                            ErrorCode = IntegracionErrorCode.NOT_FOUND,
+                            Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. respuesta de PS: {psProducto.getJson(itemId_InventDimId)}",
+                            Inventario = null
+                        };
+                    }
+                    String prodID = comb.products[0].ProductId;
+                    var combinationId = comb.products[0].CombinationId;
+                    stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", ref sbTraza);
                 }
-                int prodID = prod.products[0].ProductId;
-                var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", ref sbTraza);
-                int stockSalida = 0;
-                if (int.TryParse(stock.Stock[0].Stock, out stockSalida)) {
+                else
+                {
+                    int prodID = prod.products[0].ProductId;
+                    stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", ref sbTraza);
+                }
+
+                if (int.TryParse(stock.Stock[0].Stock, out stockSalida))
+                {
                     return new InventarioResponse
                     {
                         HayError = false,

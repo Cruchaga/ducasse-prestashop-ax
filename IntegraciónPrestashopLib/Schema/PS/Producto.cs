@@ -131,6 +131,7 @@ namespace IntegracionPrestashopLib.Schema.PS
         [JsonProperty("description_short")]
         public String ShortDescriptionString { get; set; }
 
+        public ProductAssociations Associations { get; set; }
         public bool ShouldSerializeProductId()
         {
             return (this.ProductId != 0);

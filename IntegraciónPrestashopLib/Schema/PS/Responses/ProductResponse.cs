@@ -9,6 +9,6 @@ namespace IntegracionPrestashopLib.Schema.PS.Responses
     internal class ProductResponse
     {
         [JsonProperty("product")]
-        public Producto Producto { get; set; }
+        public Producto Product { get; set; }
     }
 }

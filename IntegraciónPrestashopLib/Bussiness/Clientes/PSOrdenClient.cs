@@ -73,11 +73,39 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 count++;
             }
             string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
-            var payment = JsonConvert.DeserializeObject<PaymentResponse>(response);
+            
+            var payment =(response != "0 results\r\n")? JsonConvert.DeserializeObject<PaymentResponse>(response): null;
             return payment;
             
         }
 
+        internal static CartRulesResponse[] GetCartRules(String prestashopUrl, Dictionary<String, String> parametros)
+        {
+
+            string method = "GET";
+
+            StringBuilder sb = new StringBuilder(prestashopUrl);
+            int count = 0;
+            foreach(var dic in parametros)
+            {
+                if (count == 0)
+                    sb.Append("?");
+                else
+                    sb.Append("&");
+
+                sb.Append($"{dic.Key}={dic.Value}");
+                count++;
+            }
+            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
+            if (response.StartsWith("["))
+            {
+                var payment = JsonConvert.DeserializeObject<CartRulesResponse[]>(response);
+                return payment;
+            }
+            else
+                return null;
+            
+        }
         internal static UpdateResponse UpdateTracking(OrderHistory orden, String apiKey, String prestashopUrlBase)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));

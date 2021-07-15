@@ -43,7 +43,7 @@ namespace IntegracionPrestashopLib.Operations
             {
                 if (producto.Inventario != null)
                 {
-                    var stockRes = UpdateStock(producto.Inventario.Stock.ToString(), ((ProductResponse)res.Objeto).Producto.ProductId);
+                    var stockRes = UpdateStock(producto.Inventario.Stock.ToString(), ((ProductResponse)res.Objeto).Product.ProductId);
                     if (stockRes.Actualizado)
                     {
                         return new CreateResponse

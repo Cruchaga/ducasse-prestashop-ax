@@ -26,7 +26,10 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Currency, CurrencyResponse> psCurrency = new PSRecursoClient<Currency, CurrencyResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CurrencyResponse");
         private PSRecursoClient<Payment, PaymentsResponse> psPayment = new PSRecursoClient<Payment, PaymentsResponse>("IntegracionPrestashopLib.Schema.PS.Responses.PaymentsResponse");
         private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>("IntegracionPrestashopLib.Schema.PS.Responses.MessageResponse");
+
+        private PSRecursoClient<Schema.PS.Producto, ProductResponse> psProducto = new PSRecursoClient<Schema.PS.Producto, ProductResponse>("IntegracionPrestashopLib.Schema.PS.Responses.ProductResponse");
         private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>("IntegracionPrestashopLib.Schema.PS.tDoc");
+        private PSRecursoClient<CartRule, CartRuleResponse> psCartRules = new PSRecursoClient<CartRule, CartRuleResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CartRuleResponse");
 
         public OrdenDAL(String apiKey, String prestashopUrlBase, int userId)
         {
@@ -100,6 +103,7 @@ namespace IntegracionPrestashopLib.Operations
                                 TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
                                 NetShippingAmount = Decimal.Parse(oc.NetShipping.Replace(".", ",")),
                                 TotalAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")),
+                                TotalDicount = oc.TotalDiscounts,
                                 DetalleDeVentas = new DetalleDeVenta((from d in oc.Asociados.productos
                                                                       select new Detalle
                                                                       {
@@ -117,6 +121,20 @@ namespace IntegracionPrestashopLib.Operations
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
+                    Task tProducts = Task.Run(() =>
+                    {
+                        foreach(var prod in o.DetalleDeVentas.itemsVendidos)
+                        {
+                            sbTraza.Append($"Iniciando búsqueda de producto {prod.ItemId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                            var productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, ref sbTraza);
+                            if (productResp != null)
+                            {
+                                var producto = productResp.Product;
+                                prod.Categories = producto.Associations.categories;
+                            }
+                        }
+                    });
+
                     Customer customer;
                     Task tEstado = Task.Run(() =>
                     {
@@ -209,7 +227,7 @@ namespace IntegracionPrestashopLib.Operations
                         sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                         var urlPayment = $"{baseUrl.Replace("api/", "WS/webpayinfo.php")}";
 
-                        var parametros = new Dictionary<String, String>();
+                        var parametros = new Dictionary<string, string>();
                         parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
                         parametros.Add("cart_id", o.IdCart);
 
@@ -312,6 +330,82 @@ namespace IntegracionPrestashopLib.Operations
                                 Mensajes = new List<Comentario>()
                             };
                     });
+
+                    tProducts.Wait();
+                    Task tDiscounts = Task.Run(() => {
+                        if (o.TotalDicount > 0)
+                        {
+
+                            sbTraza.Append($"Iniciando búsqueda de datos de carrito {o.IdCart} {Environment.NewLine}");
+                            var urlPayment = $"{baseUrl.Replace("api/", "WS/cart_cart_rules.php")}";
+
+                            var parametros = new Dictionary<String, String>();
+                            parametros.Add("id_cart", o.IdCart);
+
+                            int idCart = 0;
+                            if (int.TryParse(o.IdCart, out idCart))
+                            {
+                                decimal signature = (17) + (idCart * 17);
+                                parametros.Add("signature", signature.ToString().Replace(",", "."));
+
+                                var reglasAplicadas = PSOrdenClient.GetCartRules(urlPayment, parametros);
+                                foreach (var regla in reglasAplicadas)
+                                {
+                                    if (regla.TipoRegla == "categories")
+                                    {
+                                        var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();
+                                        if (prods.Count > 0)
+                                        { 
+                                            if (regla.isPercent())
+                                            {
+                                                DescontarPorcentajeADetalles(regla, prods);
+                                            }
+                                            else
+                                            {
+                                                DescontarMontoADetallesEspecificos(regla, prods);
+                                            }
+                                        }
+                                    }
+                                    else if(regla.TipoRegla == "products")
+                                    {
+                                        var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.ItemId == regla.id_item).ToList();
+                                        if (regla.isPercent())
+                                        {
+                                            DescontarPorcentajeADetalles(regla, prods);
+                                            
+                                        }
+                                        else
+                                        {
+                                            //logica contar cantidad de prod y descontar monto al pedido 
+                                            var cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
+                                            var proporcion = regla.getAmountToDiscount() / cuentaProds;
+                                            DescontarMontoADetalles(prods, proporcion);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (regla.isPercent())
+                                        {
+                                            DescontarPorcentajeADetalles(regla, o.DetalleDeVentas.itemsVendidos);
+
+                                        }
+                                        else
+                                        {
+                                            //logica contar cantidad de prod y descontar monto al pedido 
+                                            var cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
+                                            var proporcion = regla.getAmountToDiscount() / cuentaProds;
+                                            DescontarMontoADetalles(o.DetalleDeVentas.itemsVendidos, proporcion);
+                                        }
+                                    }
+                                    
+                                    
+                                }
+                            }
+                        }
+                    });
+
+
+                    tDiscounts.Wait();
                     tComentario.Wait();
                     tEstado.Wait();
                     tCurrency.Wait();
@@ -341,6 +435,39 @@ namespace IntegracionPrestashopLib.Operations
                     Traza = sbTraza.ToString()
                 };
             }
+        }
+
+        private static void DescontarMontoADetallesEspecificos(CartRulesResponse regla, List<Detalle> prods)
+        {
+            prods.ForEach(p =>
+            {
+                p.SalesLineTotal -= regla.getAmountToDiscount() * 1.19m;
+                p.SalesLinePrice -= regla.getAmountToDiscount()*1.19m;
+                p.SalesLineNetTotalAmount -= regla.getAmountToDiscount();
+                p.SalesLineNetPrice -= regla.getAmountToDiscount();
+            });
+        }
+
+        private static void DescontarMontoADetalles(List<Detalle> prods, decimal proporcion)
+        {
+            prods.ForEach(p =>
+            {
+                p.SalesLineTotal -= (proporcion * p.SalesLineQty) * 1.19m;
+                p.SalesLinePrice -= (proporcion * p.SalesLineQty) * 1.19m;
+                p.SalesLineNetTotalAmount -= (proporcion * p.SalesLineQty);
+                p.SalesLineNetPrice -= (proporcion * p.SalesLineQty);
+            });
+        }
+
+        private static void DescontarPorcentajeADetalles(CartRulesResponse regla, List<Detalle> prods)
+        {
+            prods.ForEach(p =>
+            {
+                p.SalesLineTotal *= (100 - regla.getPercentToDiscount()) / 100;
+                p.SalesLinePrice *= (100 - regla.getPercentToDiscount()) / 100;
+                p.SalesLineNetTotalAmount *= (100 - regla.getPercentToDiscount()) / 100;
+                p.SalesLineNetPrice *= (100 - regla.getPercentToDiscount()) / 100;
+            });
         }
 
         private static string GetStringDecimalFromHexa(String comunaResp)

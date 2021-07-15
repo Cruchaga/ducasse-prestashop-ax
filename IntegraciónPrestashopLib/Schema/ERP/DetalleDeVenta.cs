@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IntegracionPrestashopLib.Schema.PS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -44,5 +45,6 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public Decimal SalesLinePrice { get; set; }
         public Decimal SalesLineNetTotalAmount { get; set; }
         public Decimal SalesLineTotal { get; set; }
+        public List<AssociatedCategory> Categories { get; internal set; }
     }
 }

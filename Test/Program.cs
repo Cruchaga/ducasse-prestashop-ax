@@ -21,16 +21,16 @@ namespace Test
 
 
 
-                //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2021-07-22"), DateTime.Parse("2021-07-23"));
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2021-08-18 11:00"), DateTime.Parse("2021-08-23"));
 
-                //Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
+                Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
-                //Console.WriteLine($"La lista de ordenes contiene {ordenes.GetSize()} filas");
-                //for(int x=0; x < ordenes.GetSize();x++)
-                //{
-                //    Console.WriteLine($"Pedido {x+1} tiene nº de orden {ordenes.GetOrden(x).SalesIdPrestaShop} con {ordenes.GetOrden(x).DetalleDeVentas.GetSize()} lineas de detalle");
-                //    Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
-                //}
+                Console.WriteLine($"La lista de ordenes contiene {ordenes.GetSize()} filas");
+                for(int x=0; x < ordenes.GetSize();x++)
+                {
+                    Console.WriteLine($"Pedido {x+1} tiene nº de orden {ordenes.GetOrden(x).SalesIdPrestaShop} con {ordenes.GetOrden(x).DetalleDeVentas.GetSize()} lineas de detalle");
+                    Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
+                }
                 //try
                 //{
                 //    var resp = oOrdenDAL.Update(new Tracking(6, 4));
@@ -89,7 +89,7 @@ namespace Test
                     Orden = new IntegracionEnviame.Schema.Requests.Orden
                     {
                         CantidadBultos = 2,
-                        CodBodegaOrigen = "LAM01-EC01",
+                        CodBodegaOrigen = "LAM01-EC01XX",
                         DescripcionContenido = "Material para terminaciones",
                         IdReferencia = "972",
                         Precio = 146483

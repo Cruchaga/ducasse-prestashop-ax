@@ -99,8 +99,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
             if (response.StartsWith("["))
             {
-                var payment = JsonConvert.DeserializeObject<CartRulesResponse[]>(response);
-                return payment;
+                var cartRules = JsonConvert.DeserializeObject<CartRulesResponse[]>(response);
+                return cartRules;
             }
             else
                 return null;

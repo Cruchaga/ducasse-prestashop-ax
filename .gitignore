@@ -59,3 +59,7 @@ Thumbs.db
 /Test/obj/Debug/Test.csproj.CopyComplete
 /Test/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
 /UnitTestProject
+IntegracionEnviame/obj/
+Test/obj/
+IntegracionEnviame/bin/
+IntegraciónPrestashopLib/obj/

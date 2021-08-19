@@ -349,8 +349,13 @@ namespace IntegracionPrestashopLib.Operations
                                 parametros.Add("signature", signature.ToString().Replace(",", "."));
 
                                 var reglasAplicadas = PSOrdenClient.GetCartRules(urlPayment, parametros);
-                                foreach (var regla in reglasAplicadas)
-                                {
+                            foreach (var regla in reglasAplicadas)
+                            {
+                                if (regla.free_shipping == "1")
+                                    {
+                                        Console.WriteLine("Free Shipping");
+                                        o.NetShippingAmount = 0;
+                                    }
                                     if (regla.TipoRegla == "categories")
                                     {
                                         var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();

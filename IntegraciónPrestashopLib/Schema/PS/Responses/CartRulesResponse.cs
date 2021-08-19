@@ -11,6 +11,7 @@ namespace IntegracionPrestashopLib.Schema.PS.Responses
         public String reduction_percent { get; set; }
         public String reduction_amount { get; set; }
         public String TipoRegla { get; set; }
+        public String free_shipping { get; set; }
         public String id_item { get; set; }
 
         public Decimal getAmountToDiscount()

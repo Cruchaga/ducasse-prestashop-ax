@@ -355,6 +355,7 @@ namespace IntegracionPrestashopLib.Operations
                                     {
                                         Console.WriteLine("Free Shipping");
                                         o.NetShippingAmount = 0;
+                                        o.TotalShippingAmount = 0;
                                     }
                                     if (regla.TipoRegla == "categories")
                                     {

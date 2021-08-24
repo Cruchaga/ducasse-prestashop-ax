@@ -21,7 +21,7 @@ namespace Test
 
 
 
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2021-08-18 11:00"), DateTime.Parse("2021-08-23"));
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2021-08-19 15:00"), DateTime.Parse("2021-08-23"));
 
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 

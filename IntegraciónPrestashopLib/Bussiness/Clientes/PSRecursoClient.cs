@@ -27,6 +27,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         }
         internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl, ref StringBuilder sbTraza)
         {
+            Console.WriteLine($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
             sbTraza.Append($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
             Stopwatch sw = new Stopwatch();
             sw.Start();

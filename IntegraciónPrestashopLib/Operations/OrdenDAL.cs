@@ -64,10 +64,16 @@ namespace IntegracionPrestashopLib.Operations
                 sw.Start();
                 var response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl, ref sbTraza);
                 var ordenesList = response.Orders;
-                if (ordenesList.Count > 0)
+                if (ordenesList.Count > 0) { 
+                    Console.WriteLine($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");
                     sbTraza.Append($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");
+                }
                 else
+                {
+                    Console.WriteLine($"No se encontraron ordenes{Environment.NewLine}");
                     sbTraza.Append($"No se encontraron ordenes{Environment.NewLine}");
+                }
+               
                 sw.Stop();
                 Console.WriteLine($"Tiempo Ordenes: {sw.Elapsed.TotalMilliseconds} ms");
                 Console.WriteLine("--------------");
@@ -175,6 +181,7 @@ namespace IntegracionPrestashopLib.Operations
                     });
                     Task tInvoiceAdd = Task.Run(() =>
                     {
+                        Console.WriteLine($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                         sbTraza.Append($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                         var invoiceAddressResp = pSDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl, ref sbTraza);
                         if (invoiceAddressResp != null)

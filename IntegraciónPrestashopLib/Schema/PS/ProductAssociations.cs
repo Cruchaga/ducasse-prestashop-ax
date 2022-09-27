@@ -8,6 +8,7 @@ namespace IntegracionPrestashopLib.Schema.PS
     public class ProductAssociations
     { 
         public List<AssociatedCategory> categories { get; set; }
+        public List<ProductBundle> product_bundle { get; set; }
 
     }
 }

@@ -82,7 +82,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resources[recursoId] == null)
                 {
                     resources.Add(recursoId, resp);
-                    Console.WriteLine($"recurso {recurso} agregado  con id {recursoId}");
+                    Console.WriteLine($"recurso {recurso} agregado  con id {recursoId}\n{s}\n=======================\n");
+
                 }
                 if (jsonResources[recursoId] == null)
                 {

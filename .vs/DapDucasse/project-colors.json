@@ -1,0 +1,26 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "89e17706-a021-4c2e-8711-93e5f442d1f7": {
+      "ProjectGuid": "89e17706-a021-4c2e-8711-93e5f442d1f7",
+      "DisplayName": "Test",
+      "ColorIndex": 0
+    },
+    "a40825f9-270d-47d9-a2ec-ac71587202e6": {
+      "ProjectGuid": "a40825f9-270d-47d9-a2ec-ac71587202e6",
+      "DisplayName": "IntegracionPrestashopLib",
+      "ColorIndex": 1
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Miscellaneous Files",
+      "ColorIndex": -1
+    },
+    "2b2a3682-7498-46ab-ab21-c483af026378": {
+      "ProjectGuid": "2b2a3682-7498-46ab-ab21-c483af026378",
+      "DisplayName": "IntegracionEnviame",
+      "ColorIndex": 2
+    }
+  },
+  "NextColorIndex": 3
+}

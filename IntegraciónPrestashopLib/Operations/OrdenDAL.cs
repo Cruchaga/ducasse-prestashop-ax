@@ -129,16 +129,51 @@ namespace IntegracionPrestashopLib.Operations
                 {
                     Task tProducts = Task.Run(() =>
                     {
-                        foreach(var prod in o.DetalleDeVentas.itemsVendidos)
+                        var itemsTemp = o.DetalleDeVentas.itemsVendidos;
+                        o.DetalleDeVentas.itemsVendidos = new List<Detalle>();
+
+                        foreach (var prod in itemsTemp)
                         {
-                            sbTraza.Append($"Iniciando búsqueda de producto {prod.ItemId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                            sbTraza.Append($"Revisando si {prod.ItemId} es un producto compuesto, para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                             var productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, ref sbTraza);
                             if (productResp != null)
                             {
-                                var producto = productResp.Product;
-                                prod.Categories = producto.Associations.categories;
+                                if(productResp.Product.CacheIsPack != "1")
+                                {
+                                    o.DetalleDeVentas.itemsVendidos.Add(prod);
+                                    prod.Categories = productResp.Product.Associations.categories;
+                                }
+                                else
+                                {
+                                    var openedItemsTemp = openPackDetail(prod, sbTraza);
+                                    foreach(var item in openedItemsTemp)
+                                    {
+                                        o.DetalleDeVentas.itemsVendidos.Add(item);
+                                        /*var detailedProdFromBundle = psProducto.GetRecurso("products", p.Id, apiKey, baseUrl, ref sbTraza);
+                                        var newDetail = new Detalle();
+                                        newDetail.Sku = detailedProdFromBundle.Product.Reference;
+                                        newDetail.ItemId = detailedProdFromBundle.Product.ProductId.ToString();
+                                        newDetail.SalesLineQty = p.quantity;
+                                        newDetail.SalesLineCurrencyCode = null;
+                                        newDetail.Categories = detailedProdFromBundle.Product.Associations.categories;
+                                        newDetail.SalesLineNetPrice= p.*/
+
+                                    }
+                                }
                             }
                         }
+
+                        /*
+                        foreach(var prod in o.DetalleDeVentas.itemsVendidos)
+                        {
+                            sbTraza.Append($"Iniciando búsqueda de producto {prod.ItemId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                            var productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, ref sbTraza); //se obtiene detalle del producto
+                            if (productResp != null)
+                            {
+                                prod.Categories = productResp.Product.Associations.categories;
+                            }
+                        }
+                        */
                     });
 
                     Customer customer;
@@ -449,6 +484,46 @@ namespace IntegracionPrestashopLib.Operations
                 };
             }
         }
+
+        private List<Detalle> openPackDetail(Detalle product, StringBuilder sbTraza)
+        {
+            ProductResponse productoPadre = psProducto.GetRecurso("products", product.ItemId, apiKey, baseUrl, ref sbTraza);
+            var resultado = new List<Detalle>();
+
+            Decimal SumNetPrice = 0;
+            Decimal SumPrice = 0;
+
+            foreach (var pb in productoPadre.Product.Associations.product_bundle)
+            {
+                var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
+                SumNetPrice = SumNetPrice + (pb.quantity * Decimal.Parse(productResp.Product.Precio.Replace(".", ",")));
+                SumPrice = SumPrice + (pb.quantity * Decimal.Parse(productResp.Product.Precio.Replace(".", ",")) * new Decimal(1.19));
+            }
+
+            Decimal factorPrecioPack = Decimal.Parse(productoPadre.Product.Precio.Replace(".", ",")) / SumNetPrice;
+
+            foreach (var pb in productoPadre.Product.Associations.product_bundle)
+            {
+                var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
+
+                Detalle d = new Detalle();
+
+                d.ItemId = pb.Id;
+                d.Sku = productResp.Product.Reference;
+                d.SalesLineQty = pb.quantity * product.SalesLineQty;
+                d.SalesLineCurrencyCode = product.SalesLineCurrencyCode;
+                d.SalesLineNetPrice = Decimal.Parse(productResp.Product.Precio.Replace(".", ",")) / factorPrecioPack;
+                d.SalesLinePrice = d.SalesLineNetPrice * new Decimal(1.19);
+                d.SalesLineNetTotalAmount = d.SalesLineNetPrice * d.SalesLineQty;
+                d.SalesLineTotal = d.SalesLinePrice * d.SalesLineQty;
+                d.Categories = productResp.Product.Associations.categories;
+                
+                resultado.Add(d);
+            }
+
+            return resultado;
+        }
+
 
         private static void DescontarMontoADetallesEspecificos(CartRulesResponse regla, List<Detalle> prods)
         {

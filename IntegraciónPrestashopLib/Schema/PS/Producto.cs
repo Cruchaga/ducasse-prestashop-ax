@@ -22,7 +22,9 @@ namespace IntegracionPrestashopLib.Schema.PS
         //[JsonProperty("available_now")]
         //[JsonProperty("cache_default_attribute")]
         //[JsonProperty("cache_has_attachments")]
-        //[JsonProperty("cache_is_pack")]
+        [JsonProperty("cache_is_pack")]
+        public String CacheIsPack { get; set; }
+
         //[JsonProperty("condition")]
         //[JsonProperty("customizable")]
         //[JsonProperty("date_add")]

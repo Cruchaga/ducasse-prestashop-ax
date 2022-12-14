@@ -254,7 +254,9 @@ namespace IntegracionPrestashopLib.Operations
                             {
                                 sbTraza.Append($"Iniciando búsqueda de datos facturacion para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                                 String url = baseUrl.Replace("api", "WS");
-
+                                //aca cambiar tdoc.php por el lugar donde hay que ir a buscar si es factura o boleta
+                                //razon social, giro
+                                //si el other viene en "Boleta" o "Factura" se cambia el o.Factura es true
                                 var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}", ref sbTraza);
                                 o.Factura = document != null && document.Tipo == 33;
 

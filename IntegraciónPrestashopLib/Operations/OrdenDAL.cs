@@ -127,6 +127,7 @@ namespace IntegracionPrestashopLib.Operations
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
+
                     Task tProducts = Task.Run(() =>
                     {
                         var itemsTemp = o.DetalleDeVentas.itemsVendidos;
@@ -228,6 +229,8 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.CustNameInvoice = invoiceAddress.Company == "" ? $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}" : invoiceAddress.Company;
                             o.Facturacion.Rut = invoiceAddress.RutEmpresa;
                             o.Facturacion.LiteralBusiness = invoiceAddress.Other;
+
+
                             Task tState = Task.Run(() =>
                             {
                                 sbTraza.Append($"Iniciando búsqueda de estado para dirección {o.Facturacion.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
@@ -258,9 +261,22 @@ namespace IntegracionPrestashopLib.Operations
                                 //razon social, giro
                                 //si el other viene en "Boleta" o "Factura" se cambia el o.Factura es true
                                 var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}", ref sbTraza);
-                                o.Factura = document != null && document.Tipo == 33;
 
-                            });
+                                if (invoiceAddress.Other == "Factura")
+                                {
+                                    o.Factura = true;
+                                    Console.WriteLine("Compra con Factura");
+                                    Console.WriteLine(o.Factura);
+
+								}
+                                else
+                                {
+                                    o.Factura = false;
+                                    Console.WriteLine("Compra con boleta");
+                                    Console.WriteLine(o.Factura);
+                                }
+
+							});
                             tState.Wait();
                             tCustomDel.Wait();
                             tDoc.Wait();
@@ -330,7 +346,23 @@ namespace IntegracionPrestashopLib.Operations
                             o.Despacho.Rut = deliveryAddress.RutEmpresa;
                             o.Despacho.ContactTelephoneNumber = deliveryAddress.Phone;
                             o.Despacho.LiteralBusiness = deliveryAddress.Company;
-                            Task tState = Task.Run(() =>
+
+
+							if (deliveryAddress.Other == "Factura")
+							{
+								o.Factura = true;
+								Console.WriteLine("[DEL] Compra con Factura");
+								Console.WriteLine(o.Factura);
+
+							}
+							else
+							{
+								o.Factura = false;
+								Console.WriteLine("[DEL] Compra con boleta");
+								Console.WriteLine(o.Factura);
+							}
+
+							Task tState = Task.Run(() =>
                             {
                                 sbTraza.Append($"Iniciando búsqueda de comuna para direccion {o.Despacho.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                                 var stateResp = psState.GetRecurso("states", deliveryAddress.StateId, apiKey, baseUrl, ref sbTraza);

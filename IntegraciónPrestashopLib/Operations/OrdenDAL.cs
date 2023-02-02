@@ -28,6 +28,7 @@ namespace IntegracionPrestashopLib.Operations
         private PSRecursoClient<Message, MessageResponse> psMessage = new PSRecursoClient<Message, MessageResponse>("IntegracionPrestashopLib.Schema.PS.Responses.MessageResponse");
 
         private PSRecursoClient<Schema.PS.Producto, ProductResponse> psProducto = new PSRecursoClient<Schema.PS.Producto, ProductResponse>("IntegracionPrestashopLib.Schema.PS.Responses.ProductResponse");
+        private PSRecursoClient<Schema.PS.Combination, CombinationResponse> psCombinacion = new PSRecursoClient<Schema.PS.Combination, CombinationResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CombinationResponse");
         private PSRecursoClient<tDoc, tDoc> psDocument = new PSRecursoClient<tDoc, tDoc>("IntegracionPrestashopLib.Schema.PS.tDoc");
         private PSRecursoClient<CartRule, CartRuleResponse> psCartRules = new PSRecursoClient<CartRule, CartRuleResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CartRuleResponse");
 
@@ -529,9 +530,19 @@ namespace IntegracionPrestashopLib.Operations
 
             foreach (var pb in productoPadre.Product.Associations.product_bundle)
             {
-                var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
-                SumNetPrice = SumNetPrice + (pb.quantity * Decimal.Parse(productResp.Product.Precio.Replace(".", ",")));
-                SumPrice = SumPrice + (pb.quantity * Decimal.Parse(productResp.Product.Precio.Replace(".", ",")) * new Decimal(1.19));
+                Decimal precio = new Decimal(0);
+                if(pb.id_product_attribute != "0")
+                {
+                    var combinacionResp = psCombinacion.GetRecurso("combinations", pb.id_product_attribute, apiKey, baseUrl, ref sbTraza);
+                    precio = Decimal.Parse(combinacionResp.combination.Precio.Replace(".", ","));
+                }
+                else
+                {
+                    var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
+                    precio = Decimal.Parse(productResp.Product.Precio.Replace(".", ","));
+                }
+                SumNetPrice = SumNetPrice + (pb.quantity * precio);
+                SumPrice = SumPrice + (pb.quantity * precio * new Decimal(1.19));
             }
 
             Decimal factorPrecioPack = Decimal.Parse(productoPadre.Product.Precio.Replace(".", ",")) / SumNetPrice;

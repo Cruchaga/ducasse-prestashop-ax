@@ -66,6 +66,49 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             return (V)resources[recursoId];
         }
 
+        /*public Decimal getCombinationPrice(string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
+        {
+            String recurso = "combinations";
+            String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+            String url = $"{baseUrl}{recurso}{recursoId}?output_format=JSON{filtros}";
+
+            try
+            {
+                string s = HttpRequestFunctions.GetRequest(url, base64);
+
+                V resp = JsonConvert.DeserializeObject<V>(s);
+
+                if (resources == null)
+                    resources = new Hashtable();
+                if (resources[recursoId] == null)
+                {
+                    resources.Add(recursoId, resp);
+                    Console.WriteLine($"recurso {recurso} agregado  con id {recursoId}\n{s}\n=======================\n");
+
+                }
+                if (jsonResources[recursoId] == null)
+                {
+                    jsonResources.Add(recursoId, s);
+                }
+            }
+            catch (WebException e)
+            {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{e.Message}]");
+                if (e.Response != null)
+                {
+                    var sr = new StreamReader(e.Response.GetResponseStream());
+                    var pageContent = sr.ReadToEnd();
+                    sr.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                sbTraza.Append($"Error al obtener recurso {recurso} con id {recursoId} [{e.Message}]");
+                throw new Exception($"Error detectado al intentar consumir la url {url} con apikey {base64} [{e.Message}:{Environment.NewLine}{e.StackTrace}]", e);
+            }
+
+        }*/
+
         private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));

@@ -19,7 +19,7 @@ namespace IntegracionPrestashopLib.Operations
         private String baseUrl;
 
         private PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse> psProducto = new PSRecursoClient<Schema.PS.ProductToUpdate[], ProductQueryResponse>("IntegracionPrestashopLib.Schema.PS.Responses.ProductQueryResponse");
-        private PSRecursoClient<Schema.PS.Combination, CombinationResponse> psCombinacion = new PSRecursoClient<Schema.PS.Combination, CombinationResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CombinationResponse");
+        private PSRecursoClient<Schema.PS.Combination, CombinationsResponse> psCombinacion = new PSRecursoClient<Schema.PS.Combination, CombinationsResponse>("IntegracionPrestashopLib.Schema.PS.Responses.CombinationsResponse");
         private PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse> pSStock = new PSRecursoClient<Schema.PS.StockAvailable, StockAvailableRepsonse>("IntegracionPrestashopLib.Schema.PS.Responses.StockAvailableRepsonse");
 
 

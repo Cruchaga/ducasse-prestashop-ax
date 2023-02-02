@@ -74,6 +74,7 @@
     <Compile Include="Schema\PS\Responses\CartRuleResponse.cs" />
     <Compile Include="Schema\PS\Responses\CartRulesResponse.cs" />
     <Compile Include="Schema\PS\Responses\CombinationResponse.cs" />
+    <Compile Include="Schema\PS\Responses\CombinationsResponse.cs" />
     <Compile Include="Schema\PS\TbkCardDetail.cs" />
     <Compile Include="Schema\PS\Country.cs" />
     <Compile Include="Schema\PS\Currency.cs" />

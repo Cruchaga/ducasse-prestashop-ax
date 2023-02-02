@@ -21,7 +21,7 @@ namespace Test
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/");
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2022-12-13 00:00"), DateTime.Parse("2022-12-14"));
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 15:00"), DateTime.Parse("2023-01-30 15:50"));
                 //
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 

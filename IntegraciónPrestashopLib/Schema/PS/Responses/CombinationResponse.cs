@@ -8,7 +8,7 @@ namespace IntegracionPrestashopLib.Schema.PS.Responses
 {
     public class CombinationResponse
     {
-        [JsonProperty("combinations")]
-        public Combination[] products { get; set; }
+        [JsonProperty("combination")]
+        public Combination combination { get; set; }
     }
 }

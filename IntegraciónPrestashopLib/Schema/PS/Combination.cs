@@ -21,5 +21,9 @@ namespace IntegracionPrestashopLib.Schema.PS
         [XmlElement("reference")]
         [JsonProperty("reference")]
         public String InventDimId { get; set; }
+
+        [XmlElement("price")]
+        [JsonProperty("price")]
+        public String Precio { get; set; }
     }
 }

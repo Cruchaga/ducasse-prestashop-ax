@@ -1,6 +1,6 @@
 ﻿using IntegracionEnviame.API;
 using IntegracionPrestashopLib.Schema.ERP;
-
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +11,8 @@ namespace Test
 {
     class Program
     {
+        private static OrdenDeVenta ord;
+
         static void Main(string[] args)
         {
             try
@@ -21,15 +23,33 @@ namespace Test
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/");
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 15:00"), DateTime.Parse("2023-01-30 15:50"));
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-01 08:00"), DateTime.Parse("2023-03-02 17:30")); // intermedio dap kits
+                //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-17 16:30"), DateTime.Parse("2023-03-17 17:00"));
                 //
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
                 Console.WriteLine($"La lista de ordenes contiene {ordenes.GetSize()} filas");
+
                 for (int x=0; x < ordenes.GetSize();x++)
                 {
-                  Console.WriteLine($"Pedido {x+1} tiene nº de orden {ordenes.GetOrden(x).SalesIdPrestaShop} con {ordenes.GetOrden(x).DetalleDeVentas.GetSize()} lineas de detalle");
-                  Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
+                    Console.WriteLine($"Pedido {x+1} tiene nº de orden {ordenes.GetOrden(x).SalesIdPrestaShop} con {ordenes.GetOrden(x).DetalleDeVentas.GetSize()} lineas de detalle");
+                    //Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
+                    OrdenDeVenta ord = ordenes.GetOrden(x);
+                    Console.WriteLine($"Orden {x}: {JsonConvert.SerializeObject(ord)}");
+
+                    Console.WriteLine($"Orden {x} contiene los siguientes {ord.DetalleDeVentas.GetSize()} items:\n\n");
+                    for(int i = 0; i<ord.DetalleDeVentas.GetSize(); i++)
+                    {
+                        Detalle detalle = ord.DetalleDeVentas.GetItemDetalle(i);
+                        Console.WriteLine($"Detalle {i}: {JsonConvert.SerializeObject(detalle)}");
+                        Console.WriteLine("----");
+
+                    }
+                    {
+
+                    }
+                    Console.WriteLine($"Orden {x}: {JsonConvert.SerializeObject(ord)}");
+
                 }
 
 

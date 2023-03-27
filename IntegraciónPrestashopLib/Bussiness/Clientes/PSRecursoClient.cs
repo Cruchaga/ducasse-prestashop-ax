@@ -125,7 +125,6 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 if (resources[recursoId] == null)
                 {
                     resources.Add(recursoId, resp);
-                    Console.WriteLine($"recurso {recurso} agregado  con id {recursoId}\n{s}\n=======================\n");
 
                 }
                 if (jsonResources[recursoId] == null)
@@ -179,9 +178,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                     resources = new Hashtable();
                 if (resources[recursoId] == null)
                 {
-                    Console.WriteLine($"Agregando {resp.ToString()} [{s}] a lista... pues se encontró vacío = {{{resources[recursoId]}}} ");
                     resources.Add(recursoId, resp);
-                    Console.WriteLine($"recurso {recurso} agregado. qty de recursos: {resources.Count}");
                 }
                 if (jsonResources[recursoId] == null)
                 {

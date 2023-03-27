@@ -151,31 +151,11 @@ namespace IntegracionPrestashopLib.Operations
                                     foreach(var item in openedItemsTemp)
                                     {
                                         o.DetalleDeVentas.itemsVendidos.Add(item);
-                                        /*var detailedProdFromBundle = psProducto.GetRecurso("products", p.Id, apiKey, baseUrl, ref sbTraza);
-                                        var newDetail = new Detalle();
-                                        newDetail.Sku = detailedProdFromBundle.Product.Reference;
-                                        newDetail.ItemId = detailedProdFromBundle.Product.ProductId.ToString();
-                                        newDetail.SalesLineQty = p.quantity;
-                                        newDetail.SalesLineCurrencyCode = null;
-                                        newDetail.Categories = detailedProdFromBundle.Product.Associations.categories;
-                                        newDetail.SalesLineNetPrice= p.*/
-
                                     }
                                 }
                             }
                         }
 
-                        /*
-                        foreach(var prod in o.DetalleDeVentas.itemsVendidos)
-                        {
-                            sbTraza.Append($"Iniciando búsqueda de producto {prod.ItemId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                            var productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, ref sbTraza); //se obtiene detalle del producto
-                            if (productResp != null)
-                            {
-                                prod.Categories = productResp.Product.Associations.categories;
-                            }
-                        }
-                        */
                     });
 
                     Customer customer;
@@ -258,10 +238,6 @@ namespace IntegracionPrestashopLib.Operations
                             {
                                 sbTraza.Append($"Iniciando búsqueda de datos facturacion para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                                 String url = baseUrl.Replace("api", "WS");
-                                //aca cambiar tdoc.php por el lugar donde hay que ir a buscar si es factura o boleta
-                                //razon social, giro
-                                //si el other viene en "Boleta" o "Factura" se cambia el o.Factura es true
-                                var document = psDocument.GetRecursoWithFilter("tdoc.php", o.IdCart , apiKey, url, $"&id_carro={o.IdCart}", ref sbTraza);
 
                                 if (invoiceAddress.Other == "Factura")
                                 {
@@ -531,16 +507,7 @@ namespace IntegracionPrestashopLib.Operations
             foreach (var pb in productoPadre.Product.Associations.product_bundle)
             {
                 Decimal precio = new Decimal(0);
-                if(pb.id_product_attribute != "0")
-                {
-                    var combinacionResp = psCombinacion.GetRecurso("combinations", pb.id_product_attribute, apiKey, baseUrl, ref sbTraza);
-                    precio = Decimal.Parse(combinacionResp.combination.Precio.Replace(".", ","));
-                }
-                else
-                {
-                    var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
-                    precio = Decimal.Parse(productResp.Product.Precio.Replace(".", ","));
-                }
+                precio = getItemPrice(ref sbTraza, pb);
                 SumNetPrice = SumNetPrice + (pb.quantity * precio);
                 SumPrice = SumPrice + (pb.quantity * precio * new Decimal(1.19));
             }
@@ -553,11 +520,14 @@ namespace IntegracionPrestashopLib.Operations
 
                 Detalle d = new Detalle();
 
+                Decimal precioSubItem = new Decimal(0);
+                precioSubItem = getItemPrice(ref sbTraza, pb);
+
                 d.ItemId = pb.Id;
                 d.Sku = productResp.Product.Reference;
                 d.SalesLineQty = pb.quantity * product.SalesLineQty;
                 d.SalesLineCurrencyCode = product.SalesLineCurrencyCode;
-                d.SalesLineNetPrice = Decimal.Parse(productResp.Product.Precio.Replace(".", ",")) / factorPrecioPack;
+                d.SalesLineNetPrice = precioSubItem * factorPrecioPack;
                 d.SalesLinePrice = d.SalesLineNetPrice * new Decimal(1.19);
                 d.SalesLineNetTotalAmount = d.SalesLineNetPrice * d.SalesLineQty;
                 d.SalesLineTotal = d.SalesLinePrice * d.SalesLineQty;
@@ -569,6 +539,22 @@ namespace IntegracionPrestashopLib.Operations
             return resultado;
         }
 
+        private decimal getItemPrice(ref StringBuilder sbTraza, ProductBundle pb)
+        {
+            decimal precio;
+            if (pb.id_product_attribute != "0")
+            {
+                var combinacionResp = psCombinacion.GetRecurso("combinations", pb.id_product_attribute, apiKey, baseUrl, ref sbTraza);
+                precio = Decimal.Parse(combinacionResp.combination.Precio.Replace(".", ","));
+            }
+            else
+            {
+                var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
+                precio = Decimal.Parse(productResp.Product.Precio.Replace(".", ","));
+            }
+
+            return precio;
+        }
 
         private static void DescontarMontoADetallesEspecificos(CartRulesResponse regla, List<Detalle> prods)
         {
@@ -619,19 +605,6 @@ namespace IntegracionPrestashopLib.Operations
 */
         public UpdateResponse Update(Tracking tracking)
         {
-            //Type _type;
-            //FieldInfo[] propList;
-            //bool existe;
-            //ValidateEstadoId(tracking.NuevoEstadoId, out _type, out propList, out existe);
-            //if (!existe)
-            //{
-            //    return new UpdateResponse
-            //    {
-            //        Actualizado = false,
-            //        ErrorCode = IntegracionErrorCode.BAD_ATTRIBUTE,
-            //        Error = $"El valor de estado [{tracking.NuevoEstadoId}] no se reconoce. Los valores aceptados son: [{String.Join(",", propList.Select(p => $"{p.GetValue(_type).ToString()}").ToArray<String>())}]"
-            //    };
-            //}
             if (this.userId != 0)
             {
                 return PSOrdenClient.UpdateTracking(new OrderHistory

@@ -524,9 +524,9 @@ namespace IntegracionPrestashopLib.Operations
                 precioSubItem = getItemPrice(ref sbTraza, pb);
 
                 d.ItemId = pb.Id;
-                d.Sku = productResp.Product.Reference;
+                //d.Sku = productResp.Product.Reference;
+                d.Sku = getItemSKU(ref sbTraza, pb);
                 d.SalesLineQty = pb.quantity * product.SalesLineQty;
-                d.SalesLineCurrencyCode = product.SalesLineCurrencyCode;
                 d.SalesLineNetPrice = precioSubItem * factorPrecioPack;
                 d.SalesLinePrice = d.SalesLineNetPrice * new Decimal(1.19);
                 d.SalesLineNetTotalAmount = d.SalesLineNetPrice * d.SalesLineQty;
@@ -537,6 +537,23 @@ namespace IntegracionPrestashopLib.Operations
             }
 
             return resultado;
+        }
+
+        private String getItemSKU(ref StringBuilder sbTraza, ProductBundle pb)
+        {
+            String sku;
+            if (pb.id_product_attribute != "0")
+            {
+                CombinationResponse combinacionResp = psCombinacion.GetRecurso("combinations", pb.id_product_attribute, apiKey, baseUrl, ref sbTraza);
+                sku = combinacionResp.combination.InventDimId;
+            }
+            else
+            {
+                var productResp = psProducto.GetRecurso("products", pb.Id, apiKey, baseUrl, ref sbTraza);
+                sku = productResp.Product.Reference;
+            }
+
+            return sku;
         }
 
         private decimal getItemPrice(ref StringBuilder sbTraza, ProductBundle pb)

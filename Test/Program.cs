@@ -23,7 +23,8 @@ namespace Test
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/");
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-01 08:00"), DateTime.Parse("2023-03-02 17:30")); // intermedio dap kits
+                //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 16:00"), DateTime.Parse("2023-01-04 16:30")); // intermedio dap kits
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-01 08:00"), DateTime.Parse("2023-03-01 09:00")); // intermedio dap NO kits
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-17 16:30"), DateTime.Parse("2023-03-17 17:00"));
                 //
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
@@ -33,7 +34,8 @@ namespace Test
                 for (int x=0; x < ordenes.GetSize();x++)
                 {
                     Console.WriteLine($"Pedido {x+1} tiene nº de orden {ordenes.GetOrden(x).SalesIdPrestaShop} con {ordenes.GetOrden(x).DetalleDeVentas.GetSize()} lineas de detalle");
-                    //Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
+                    Console.WriteLine($"Linea 1 cantidad = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).SalesLineQty}");
+                    Console.WriteLine($"Linea 1 SKU = {ordenes.GetOrden(x).DetalleDeVentas.GetItemDetalle(0).Sku}");
                     OrdenDeVenta ord = ordenes.GetOrden(x);
                     Console.WriteLine($"Orden {x}: {JsonConvert.SerializeObject(ord)}");
 

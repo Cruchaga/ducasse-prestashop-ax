@@ -1,10 +1,13 @@
 ﻿using IntegracionEnviame.API;
+using IntegracionEnviame.Schema.Request;
+using IntegracionPrestashopLib.Operations;
 using IntegracionPrestashopLib.Schema.ERP;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text;
 
 namespace Test
@@ -12,6 +15,311 @@ namespace Test
     class Program
     {
         private static OrdenDeVenta ord;
+
+        private 
+
+        static void AxSymTest()
+        {
+
+            IntegracionPrestashopLib.Operations.OrdenDAL oApiOrdenDal;
+            IntegracionPrestashopLib.Schema.dto.OrdenesResponse oOrdenes;
+            IntegracionPrestashopLib.Schema.ERP.OrdenDeVenta oSalesOrder;
+            IntegracionPrestashopLib.Schema.ERP.Comentarios oComentarios;
+            IntegracionPrestashopLib.Schema.ERP.Comentario oComentario;
+            IntegracionPrestashopLib.Schema.ERP.DetalleDeVenta oSalesLines;
+            IntegracionPrestashopLib.Schema.ERP.Facturacion oFacturacion;
+            IntegracionPrestashopLib.Schema.ERP.Direccion oInvoiceAddress;
+            IntegracionPrestashopLib.Schema.ERP.Direccion oDeliveryAddress;
+            IntegracionPrestashopLib.Schema.ERP.Despacho oDelivery;
+            IntegracionPrestashopLib.Schema.ERP.Detalle oSalesLine;
+            IntegracionPrestashopLib.Schema.ERP.TransbankInfo oTransbankInfo;
+
+            int iterOrders;
+            long salesOrderId;
+
+            String custAccount;
+            String custName;
+            String invoiceAddress;
+            String invoiceCity;
+            String invoiceCountyId;
+            Boolean storePickUp;
+            String deliveryAddress;
+            String deliveryCity;
+            String deliveryCountyId;
+
+            String contactName;
+            String contactEmail;
+            String contactPhone;
+
+            String customerRef;
+
+            String strSku;
+
+            int numLines;
+            int iterLines;
+
+            Decimal listPrice;
+            Decimal netPrice;
+            Decimal lineTotal;
+            Decimal lineQty;
+
+
+            String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";
+            String eShopUri = "https://intermedio.dapducasse.cl/api/";
+            int eShopUser = 8;
+
+            oApiOrdenDal = new IntegracionPrestashopLib.Operations.OrdenDAL(eShopApiKey, eShopUri, eShopUser);
+
+            DateTime _startDateTime = DateTime.Parse("2023-01-04 15:50");
+            //DateTime _startDateTime = DateTime.Parse("2023-03-01 00:00");
+            DateTime _endDateTime = DateTime.Parse("2023-03-04 17:10");
+            //DateTime _endDateTime = DateTime.Parse("2023-03-01 16:30");
+
+
+
+
+            oOrdenes = oApiOrdenDal.GetOrdenes(_startDateTime, _endDateTime);
+            int errorCode = oOrdenes.ErrorCode;
+            int numOrders = oOrdenes.GetSize();
+
+            for (iterOrders = 0; iterOrders < numOrders; iterOrders++)
+            {
+                try
+                {
+                    //- Set object values to local variables
+                    oSalesOrder = oOrdenes.GetOrden(iterOrders);
+                    salesOrderId = oSalesOrder.SalesIdPrestaShop;
+
+                    String strPrestaShopRef = oSalesOrder.Referencia;
+                    DateTime salesDateTime = oSalesOrder.SalesDate;
+                    Boolean isFactura = oSalesOrder.Factura;
+                    Decimal totalNetAmount = oSalesOrder.TotalNetAmount;
+                    Decimal totalAmount = oSalesOrder.TotalAmount;
+                    Decimal totalTax = oSalesOrder.TaxAmount;
+                    Decimal shippingCost = oSalesOrder.NetShippingAmount;
+                    //- Transaction Code
+                    oTransbankInfo = oSalesOrder.TransactionInfo;
+                    String strTransactionCode = oTransbankInfo.BuyOrder;
+                    //- Comentarios
+
+                    oComentarios = oSalesOrder.Mensajes;
+                    int numComments = oComentarios.GetSize();
+                    if (numComments > 0)
+                    {
+                        oComentario = oComentarios.GetMensaje(0);
+                        customerRef = oComentario.Msg;
+                    }
+                    //- Invoice data
+                    oFacturacion = oSalesOrder.Facturacion;
+
+                    if (isFactura)
+                    {
+                        custAccount = oFacturacion.Rut;
+                        //custAccount = strRem(custAccount, '.');
+                        //custAccount = strRem(custAccount, '-');
+                        //custAccountSd = substr(custAccount, strLen(custAccount), 1);
+                        //custAccount = substr(custAccount, 1, strLen(custAccount) - 1);
+                        custName = oFacturacion.CustNameInvoice;
+                        String strLiteralBusiness = oFacturacion.LiteralBusiness;
+                    }
+                    else
+                    {
+                        custAccount = "777777777";
+                        //custAccountSd = DUCValidateSecurityDigit::ValidateDigit(custAccount);
+                        custName = "Nombre por defecto";//CustTable::find(custAccount).Name;
+                    }
+                    //- Invoice Address
+                    oInvoiceAddress = oFacturacion.Direccion;
+                    invoiceAddress = oInvoiceAddress.AddressStreet;
+                    invoiceCity = oInvoiceAddress.AddressCity;
+                    invoiceCountyId = oInvoiceAddress.AddressCounty;
+                    //- Delivery Address
+                    oDelivery = oSalesOrder.Despacho;
+                    storePickUp = oDelivery.EsRetiroEnTienda;
+                    oDeliveryAddress = oDelivery.Direccion;
+                    deliveryAddress = oDeliveryAddress.AddressStreet;
+                    deliveryCity = oDeliveryAddress.AddressCity;
+                    deliveryCountyId = oDeliveryAddress.AddressCounty;
+                    //- Contact
+                    if (storePickUp)
+                    {
+                        contactName = oSalesOrder.CustomerName;
+                        contactEmail = oSalesOrder.CustomerEmail;
+                        contactPhone = oFacturacion.PhoneNumber;
+                    }
+                    else
+                    {
+                        contactName = oDelivery.CustName;
+                        contactEmail = oDelivery.ContactEmail;
+                        contactPhone = oDelivery.ContactTelephoneNumber;
+                    }
+                    customerRef = contactName + '-' + contactPhone;
+
+                    //- Create Sales Order Details
+                    oSalesLines = oSalesOrder.DetalleDeVentas;
+                    numLines = oSalesLines.GetSize();
+                    for (iterLines = 0; iterLines < numLines; iterLines++)
+                    {
+                        //- Set object values
+                        oSalesLine = oSalesLines.GetItemDetalle(iterLines);
+                        strSku = oSalesLine.Sku;
+                        String itemId = oSalesLine.ItemId;
+                        //strSku = strRem(strSku, ' ');
+                        //strSku = '.' + strSku;
+                        //conSku = str2con(strSku, '-');
+                        //itemId = conPeek(conSku, 1);
+                        //itemId = strRem(itemId, '.');
+                        //- Setting InventDimId
+                        //inventDimId = conPeek(conSku, 2);
+                        //- Amount
+                        listPrice = oSalesLine.SalesLineNetPrice;
+                        netPrice = oSalesLine.SalesLineNetPrice;
+                        lineTotal = oSalesLine.SalesLineNetTotalAmount;
+                        lineQty = oSalesLine.SalesLineQty;
+
+                        Console.WriteLine("SKU: " + strSku + " | listPrice: " + listPrice + " | netPrice: " + netPrice + " | lineTotal: " + lineTotal + " | lineQty: " + lineQty);
+
+                        //- Create line
+                        //eSalesLines.clear();
+                        //eSalesLines.eSalesId = eSalesTable.eSalesId;
+                        //eSalesLines.eDimension04 = InventTable::find(itemId).Dimension[4];
+                        //- Set InventLocationId
+                        /*
+                        if (curExt() == 'CMD')
+                        {
+                            switch (eSalesLines.eDimension04)
+                            {
+                                case '01','02','03','04','81':
+                            eSalesLines.eInventLocationId = '1201';
+                                    break;
+                                case '1104','1201','1203','1204','1205','1206','1401','1601':
+                            eSalesLines.eInventLocationId = '1203-CWD';
+                                    break;
+                                case '05','06','G5':
+                            eSalesLines.eInventLocationId = '1201-DCO';
+                                    break;
+                                case '99':
+                                    break;
+                                default:
+                                    eSalesLines.eInventLocationId = '1201-CWD';
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            eSalesLines.eInventLocationId = '1901';
+                        }
+                        */
+                        //curInventLocationId = eSalesLines.eInventLocationId;
+                        //eSalesLines.eItemId = itemId;
+                        //eSalesLines.eConfigId = InventDim::find(conPeek(conSku, 2)).configId;
+                        //eSalesLines.eSizeId = InventDim::find(conPeek(conSku, 2)).InventSizeId;
+                        //eSalesLines.eColorId = InventDim::find(conPeek(conSku, 2)).InventColorId;
+                        //-
+                        //eSalesLines.eInventDimId = inventDimId;
+                        //eSalesLines.eCurrencyCode = CompanyInfo::find().CurrencyCode;
+                        //eSalesLines.ePriceList = listPrice;
+                        //eSalesLines.eLineNetTotal = netPrice;
+                        //eSalesLines.eLineTotal = lineTotal;
+                        //eSalesLines.eSalesQty = lineQty;
+                        //- Values
+                        //eSalesLines.insert();
+                    }
+                    //- Create line for Shipping Cost.
+                    /*
+                    if (shippingCost > 0 && eSalesLines)
+                    {
+                        //- Create line
+                        eSalesLines.clear();
+                        eSalesLines.eSalesId = eSalesTable.eSalesId;
+                        eSalesLines.eItemId = '9900000005';
+                        eSalesLines.eDimension04 = InventTable::find(eSalesLines.eItemId).Dimension[4];
+                        eSalesLines.eInventDimId = InventDim::inventDimIdBlank();
+                        eSalesLines.eInventLocationId = curInventLocationId;
+                        eSalesLines.eCurrencyCode = CompanyInfo::find().CurrencyCode;
+                        eSalesLines.ePriceList = shippingCost;
+                        eSalesLines.eLineNetTotal = shippingCost;
+                        eSalesLines.eLineTotal = shippingCost;
+                        eSalesLines.eSalesQty = 1;
+                        //- Values
+                        eSalesLines.insert();
+                    }
+                    */
+                    //- Create sales table
+                    /*
+                    lineNum = 1;
+                    curLineBusiness = '';
+                    curInventLocationId = '';
+                    if (eSalesTable && eSalesLines)
+                    {
+                        while select eSalesLines order by eSalesLines.eInventLocationId,eSalesLines.eLineNum
+                            where       eSalesLines.eSalesId == eSalesTable.eSalesId
+                        {
+                            if (curInventLocationId != eSalesLines.eInventLocationId)
+                            {
+                                if (curInventLocationId != '')
+                                {
+                                    //- Sachip calc
+                                    if (!args)
+                                    {
+                                        args = new args();
+                                    }
+                                    args.record(salesTable);
+                                    SalesShipCalc::main(args);
+                                    //- Create picking.
+                                    //this.createSalesPickingList(salesTable);
+                                }
+                                curInventLocationId = eSalesLines.eInventLocationId;
+                                salesTable = eSalesImport::createSalesTable(eSalesTable, curInventLocationId);
+                                //-
+                                eSalesListSalesId.clear();
+                                eSalesListSalesId.eSalesTable = eSalesTable.RecId;
+                                eSalesListSalesId.SalesId = salesTable.SalesId;
+                                eSalesListSalesId.insert();
+                                lineNum = 1;
+                            }
+                            //- Validate if exist onhand available main warehouse
+                            curQty = this.currentOnHand(eSalesLines.eItemId, inventDimId, curInventLocationId);
+                            if (curQty < eSalesLines.eSalesQty
+                               &&
+                               InventTable::find(eSalesLines.eItemId).ItemType != ItemType::Service
+                               &&
+                               curInventLocationId == '1201-DCO')
+                            {
+                                if (this.currentOnHand(eSalesLines.eItemId, eSalesLines.eInventDimId, 'LAM01-EC01') >= eSalesLines.eSalesQty - curQty)
+                                {
+                                    //this.createTransferJour(eSalesLines.eItemId,eSalesLines.eInventDimId,'LAM01-EC01',curInventLocationId,eSalesLines.eSalesQty - curQty,salesTable.Dimension);
+                                }
+                            }
+                            //-
+                            salesLine = eSalesImport::createSalesLine(salesTable, eSalesLines, eSalesLines.eInventLocationId, lineNum);
+                            lineNum++;
+                        }
+                        if (!args)
+                        {
+                            args = new args();
+                        }
+                        if (salesTable)
+                        {
+                            args.record(salesTable);
+                            SalesShipCalc::main(args);
+                            //- Create picking
+                            this.createSalesPickingList(salesTable);
+                        }
+                    }
+                    ttscommit;
+                    */
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
+
+
+
+
+        }
 
         static void Main(string[] args)
         {
@@ -21,6 +329,12 @@ namespace Test
                 //IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/", 8);
                 IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://intermedio.dapducasse.cl/api/");
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/");
+
+                Program pr = new Program();
+
+                AxSymTest();
+                return;
+
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 16:00"), DateTime.Parse("2023-01-04 16:30")); // intermedio dap kits

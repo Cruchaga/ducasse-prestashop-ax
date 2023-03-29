@@ -509,8 +509,11 @@ namespace IntegracionPrestashopLib.Operations
                 Decimal precio = new Decimal(0);
                 precio = getItemPrice(ref sbTraza, pb);
                 SumNetPrice = SumNetPrice + (pb.quantity * precio);
-                SumPrice = SumPrice + (pb.quantity * precio * new Decimal(1.19));
+                Console.WriteLine("PB Id: " + pb.Id + " ; cant: " + pb.quantity + " ; precio unitario Neto: " + precio + " ; Precio linea Neto: " + pb.quantity * precio);
             }
+            Console.WriteLine("Precio Detalles Neto: " + SumNetPrice);
+
+            SumPrice = SumNetPrice * new Decimal(1.19);
 
             Decimal factorPrecioPack = Decimal.Parse(productoPadre.Product.Precio.Replace(".", ",")) / SumNetPrice;
 
@@ -545,7 +548,7 @@ namespace IntegracionPrestashopLib.Operations
             if (pb.id_product_attribute != "0")
             {
                 CombinationResponse combinacionResp = psCombinacion.GetRecurso("combinations", pb.id_product_attribute, apiKey, baseUrl, ref sbTraza);
-                sku = combinacionResp.combination.InventDimId;
+                sku = combinacionResp.combination.Reference;
             }
             else
             {

@@ -208,8 +208,21 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
                             o.Facturacion.PhoneNumber = invoiceAddress.Phone;
                             o.Facturacion.CustNameInvoice = invoiceAddress.Company == "" ? $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}" : invoiceAddress.Company;
-                            o.Facturacion.Rut = invoiceAddress.RutEmpresa;
+                            o.Facturacion.Rut = invoiceAddress.RutEmpresa.Trim();
                             o.Facturacion.LiteralBusiness = invoiceAddress.Other;
+
+
+                            if (invoiceAddress.Other == "Factura")
+                            {
+                                o.Factura = true;
+                                Console.WriteLine("Compra con Factura");
+
+                            }
+                            else
+                            {
+                                o.Factura = false;
+                                Console.WriteLine("Compra con boleta");
+                            }
 
 
                             Task tState = Task.Run(() =>
@@ -233,8 +246,10 @@ namespace IntegracionPrestashopLib.Operations
                                     var customerDelivery = customerDeliveryResp.Clientes;
                                     o.Facturacion.EmailInvoice = customerDelivery.Email;
                                 }
+
+
                             });
-                            Task tDoc = Task.Run(() =>
+                            /*Task tDoc = Task.Run(() =>
                             {
                                 sbTraza.Append($"Iniciando búsqueda de datos facturacion para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                                 String url = baseUrl.Replace("api", "WS");
@@ -243,20 +258,18 @@ namespace IntegracionPrestashopLib.Operations
                                 {
                                     o.Factura = true;
                                     Console.WriteLine("Compra con Factura");
-                                    Console.WriteLine(o.Factura);
 
 								}
                                 else
                                 {
                                     o.Factura = false;
                                     Console.WriteLine("Compra con boleta");
-                                    Console.WriteLine(o.Factura);
                                 }
 
-							});
+							});*/
                             tState.Wait();
                             tCustomDel.Wait();
-                            tDoc.Wait();
+                            //tDoc.Wait();
                         }
                     });
                     Task tPayments = Task.Run(() =>

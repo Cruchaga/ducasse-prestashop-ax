@@ -65,14 +65,15 @@ namespace Test
 
 
             String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";
-            String eShopUri = "https://intermedio.dapducasse.cl/api/";
+            //String eShopUri = "https://intermedio.dapducasse.cl/api/";
+            String eShopUri = "https://dapducasse.cl/api/";
             int eShopUser = 8;
 
             oApiOrdenDal = new IntegracionPrestashopLib.Operations.OrdenDAL(eShopApiKey, eShopUri, eShopUser);
 
-            DateTime _startDateTime = DateTime.Parse("2023-01-04 15:50");
+            DateTime _startDateTime = DateTime.Parse("2023-05-22 21:10");
             //DateTime _startDateTime = DateTime.Parse("2023-03-01 00:00");
-            DateTime _endDateTime = DateTime.Parse("2023-03-04 17:10");
+            DateTime _endDateTime = DateTime.Parse("2023-05-22 21:29");
             //DateTime _endDateTime = DateTime.Parse("2023-03-01 16:30");
 
 
@@ -325,9 +326,9 @@ namespace Test
         {
             try
             {
-                IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://intermedio.dapducasse.cl/api/", 8);
+                IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://dapducasse.cl/api/", 8);
                 //IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/", 8);
-                IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://intermedio.dapducasse.cl/api/");
+                IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://dapducasse.cl/api/");
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/");
 
                 Program pr = new Program();
@@ -338,7 +339,7 @@ namespace Test
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 16:00"), DateTime.Parse("2023-01-04 16:30")); // intermedio dap kits
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-01 08:00"), DateTime.Parse("2023-03-01 09:00")); // intermedio dap NO kits
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-04-19 16:39"), DateTime.Parse("2023-04-19 16:45")); // intermedio dap NO kits
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-03-17 16:30"), DateTime.Parse("2023-03-17 17:00"));
                 //
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));

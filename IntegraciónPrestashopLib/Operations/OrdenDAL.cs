@@ -196,7 +196,7 @@ namespace IntegracionPrestashopLib.Operations
                             });
                         }
                     });
-                    Task tInvoiceAdd = Task.Run(() =>
+                    Task tInvoiceAdd = Task.Run(() => 
                     {
                         Console.WriteLine($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
                         sbTraza.Append($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
@@ -212,17 +212,7 @@ namespace IntegracionPrestashopLib.Operations
                             o.Facturacion.LiteralBusiness = invoiceAddress.Other;
 
 
-                            if (invoiceAddress.Other == "Factura")
-                            {
-                                o.Factura = true;
-                                Console.WriteLine("Compra con Factura");
 
-                            }
-                            else
-                            {
-                                o.Factura = false;
-                                Console.WriteLine("Compra con boleta");
-                            }
 
 
                             Task tState = Task.Run(() =>
@@ -269,9 +259,13 @@ namespace IntegracionPrestashopLib.Operations
 							});*/
                             tState.Wait();
                             tCustomDel.Wait();
+
+
+
                             //tDoc.Wait();
                         }
                     });
+
                     Task tPayments = Task.Run(() =>
                     {
                         sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
@@ -338,7 +332,7 @@ namespace IntegracionPrestashopLib.Operations
                             o.Despacho.LiteralBusiness = deliveryAddress.Company;
 
 
-							if (deliveryAddress.Other == "Factura")
+							/*if (deliveryAddress.Other == "Factura")
 							{
 								o.Factura = true;
 								Console.WriteLine("[DEL] Compra con Factura");
@@ -350,7 +344,7 @@ namespace IntegracionPrestashopLib.Operations
 								o.Factura = false;
 								Console.WriteLine("[DEL] Compra con boleta");
 								Console.WriteLine(o.Factura);
-							}
+							}*/
 
 							Task tState = Task.Run(() =>
                             {
@@ -485,6 +479,17 @@ namespace IntegracionPrestashopLib.Operations
                     tDeliveryAddress.Wait();
                     tCustomer.Wait();
 
+                    if (o.Facturacion.LiteralBusiness == "Factura")
+                    {
+                        o.Factura = true;
+                        Console.WriteLine("Compra con Factura");
+                    }
+                    else
+                    {
+                        o.Factura = false;
+                        Console.WriteLine("Compra con boleta");
+                    }
+
                     if (o.Despacho.EsRetiroEnTienda)
                     {
                         o.Despacho.ContactEmail = o.CustomerEmail;
@@ -605,10 +610,12 @@ namespace IntegracionPrestashopLib.Operations
             prods.ForEach(p =>
             {
                 p.SalesLineTotal -= (proporcion * p.SalesLineQty) * 1.19m;
-                p.SalesLinePrice -= (proporcion * p.SalesLineQty) * 1.19m;
+                p.SalesLinePrice -= (proporcion) * 1.19m;
                 p.SalesLineNetTotalAmount -= (proporcion * p.SalesLineQty);
-                p.SalesLineNetPrice -= (proporcion * p.SalesLineQty);
+                p.SalesLineNetPrice -= (proporcion);
+                //Console.Write("");
             });
+            return;
         }
 
         private static void DescontarPorcentajeADetalles(CartRulesResponse regla, List<Detalle> prods)

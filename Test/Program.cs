@@ -64,16 +64,18 @@ namespace Test
             Decimal lineQty;
 
 
-            String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";
+            //String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";//dap ducasse
+            String eShopApiKey = "PWYRQDRTIQX125QYBZSI5AV91B32YCNR"; //stock insumos
             //String eShopUri = "https://intermedio.dapducasse.cl/api/";
-            String eShopUri = "https://dapducasse.cl/api/";
+            //String eShopUri = "https://dapducasse.cl/api/";
+            String eShopUri = "https://stockinsumos.cl/api/";
             int eShopUser = 8;
 
             oApiOrdenDal = new IntegracionPrestashopLib.Operations.OrdenDAL(eShopApiKey, eShopUri, eShopUser);
 
-            DateTime _startDateTime = DateTime.Parse("2023-10-04 00:00");
+            DateTime _startDateTime = DateTime.Parse("2024-09-28 00:00");
             //DateTime _startDateTime = DateTime.Parse("2023-03-01 00:00");
-            DateTime _endDateTime = DateTime.Parse("2023-10-05 12:15");
+            DateTime _endDateTime = DateTime.Parse("2024-10-05 12:15");
             //DateTime _endDateTime = DateTime.Parse("2023-03-01 16:30");
 
 
@@ -340,7 +342,7 @@ namespace Test
 
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-01-04 16:00"), DateTime.Parse("2023-01-04 16:30")); // intermedio dap kits
                 //IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2023-04-19 16:39"), DateTime.Parse("2023-04-19 16:45")); // intermedio dap NO kits
-                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2024-04-04 16:30"), DateTime.Parse("2024-05-17 17:00"));
+                IntegracionPrestashopLib.Schema.dto.OrdenesResponse ordenes = oOrdenDAL.GetOrdenes(DateTime.Parse("2024-09-28 11:30"), DateTime.Parse("2024-10-17 17:00"));
                 
 
 

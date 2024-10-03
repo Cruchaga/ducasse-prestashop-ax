@@ -409,29 +409,29 @@ namespace IntegracionPrestashopLib.Operations
                                 parametros.Add("signature", signature.ToString().Replace(",", "."));
 
                                 var reglasAplicadas = PSOrdenClient.GetCartRules(urlPayment, parametros);
-                            foreach (var regla in reglasAplicadas)
-                            {
-                                if (regla.free_shipping == "1")
+                                foreach (var regla in reglasAplicadas)
+                                {
+                                    if (regla.free_shipping == "1")
                                     {
                                         Console.WriteLine("Free Shipping");
                                         o.NetShippingAmount = 0;
                                         o.TotalShippingAmount = 0;
                                     }
                                     if (regla.TipoRegla == "categories")
-                                    {
-                                        var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();
-                                        if (prods.Count > 0)
-                                        { 
-                                            if (regla.isPercent())
-                                            {
-                                                DescontarPorcentajeADetalles(regla, prods);
-                                            }
-                                            else
-                                            {
-                                                DescontarMontoADetallesEspecificos(regla, prods);
+                                        {
+                                            var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();
+                                            if (prods.Count > 0)
+                                            { 
+                                                if (regla.isPercent())
+                                                {
+                                                    DescontarPorcentajeADetalles(regla, prods);
+                                                }
+                                                else
+                                                {
+                                                    DescontarMontoADetallesEspecificos(regla, prods);
+                                                }
                                             }
                                         }
-                                    }
                                     else if(regla.TipoRegla == "products")
                                     {
                                         var prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.ItemId == regla.id_item).ToList();
@@ -447,6 +447,17 @@ namespace IntegracionPrestashopLib.Operations
                                             var proporcion = regla.getAmountToDiscount() / cuentaProds;
                                             DescontarMontoADetalles(prods, proporcion);
                                         }
+                                    }
+                                    else if (regla.TipoRegla == "total")
+                                    {
+                                        Decimal discountAmount = regla.getAmountToDiscount();
+                                        Decimal normalTotalSale = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLinePrice * i.SalesLineQty);
+                                        Decimal discountedTotalSale = normalTotalSale - discountAmount;
+
+                                        Decimal finalPriceProportion = discountedTotalSale / normalTotalSale;
+                                        var prods = o.DetalleDeVentas.itemsVendidos;
+                                        AplicarFactorADetalles(finalPriceProportion, prods);
+
                                     }
                                     else
                                     {
@@ -512,6 +523,18 @@ namespace IntegracionPrestashopLib.Operations
                     Traza = sbTraza.ToString()
                 };
             }
+        }
+
+        private void AplicarFactorADetalles(decimal finalPriceProportion, List<Detalle> prods)
+        {
+            prods.ForEach(p =>
+            {
+                p.SalesLineTotal *= finalPriceProportion;
+                p.SalesLinePrice *= finalPriceProportion;
+                p.SalesLineNetTotalAmount *= finalPriceProportion;
+                p.SalesLineNetPrice *= finalPriceProportion;
+            });
+            Console.WriteLine("Applied Price Factor to Details");
         }
 
         private List<Detalle> openPackDetail(Detalle product, StringBuilder sbTraza)

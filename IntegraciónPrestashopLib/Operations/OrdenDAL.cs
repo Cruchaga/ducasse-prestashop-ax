@@ -15,6 +15,9 @@ namespace IntegracionPrestashopLib.Operations
 {
     public class OrdenDAL
     {
+        private const string WEBPAY = "Webpay Plus";
+        private const string BCHILE = "Banchile Pagos";
+        
         private String apiKey;
         private String baseUrl;
         private int userId;
@@ -63,8 +66,8 @@ namespace IntegracionPrestashopLib.Operations
 
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
-                var response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl, ref sbTraza);
-                var ordenesList = response.Orders;
+                OrdenesResponse response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl, ref sbTraza);
+                IList<OrdenDeCompra> ordenesList = response.Orders;
                 if (ordenesList.Count > 0) { 
                     Console.WriteLine($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");
                     sbTraza.Append($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");
@@ -79,51 +82,39 @@ namespace IntegracionPrestashopLib.Operations
                 Console.WriteLine($"Tiempo Ordenes: {sw.Elapsed.TotalMilliseconds} ms");
                 Console.WriteLine("--------------");
                 sw.Reset();
-                var resp = (from oc in ordenesList
-                            select new OrdenDeVenta
-                            {
-                                SalesIdPrestaShop = oc.Id,
-                                Referencia = oc.Referencia,
-                                IdCart = oc.IdCart,
-                                SalesDate = oc.DateAdd,
-                                CustomerId = oc.CustomerId,
-                                Facturacion = new Facturacion
-                                {
-                                    Direccion = new Direccion
-                                    {
-                                        AddressId = oc.InvoiceDeliveryId
-                                    }
-                                },
-                                Despacho = new Schema.ERP.Despacho
-                                {
-                                    Direccion = new Direccion
-                                    {
-                                        AddressId = oc.AddressDeliveryId
-                                    }
-                                },
-                                PaymMode = oc.Payment,
-                                Factura = false, 
-                                TotalWeight = 0,
-                                CurrencyId = oc.CurrencyId, 
-                                TotalNetAmount = Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
-                                TaxAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")) - Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
-                                TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
-                                NetShippingAmount = Decimal.Parse(oc.NetShipping.Replace(".", ",")),
-                                TotalAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")),
-                                TotalDicount = oc.TotalDiscounts,
-                                DetalleDeVentas = new DetalleDeVenta((from d in oc.Asociados.productos
-                                                                      select new Detalle
-                                                                      {
-                                                                          ItemId = d.ProductId,
-                                                                          Sku = d.Reference,
-                                                                          SalesLineQty = Decimal.Parse(d.Cantidad.Replace(".", ",")),
-                                                                          SalesLineNetPrice = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")), 
-                                                                          SalesLinePrice = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")),
-                                                                          SalesLineNetTotalAmount = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ",")),
-                                                                          SalesLineTotal = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ","))
-                                                                      }).ToList()),
-                                EstadoId = oc.CurrentState
-                            }).ToList<OrdenDeVenta>();
+                List<OrdenDeVenta> resp = (from oc in ordenesList
+                select new OrdenDeVenta
+                {
+                    SalesIdPrestaShop = oc.Id,
+                    Referencia = oc.Referencia,
+                    IdCart = oc.IdCart,
+                    SalesDate = oc.DateAdd,
+                    CustomerId = oc.CustomerId,
+                    Facturacion = new Facturacion { Direccion = new Direccion { AddressId = oc.InvoiceDeliveryId } },
+                    Despacho = new Schema.ERP.Despacho { Direccion = new Direccion { AddressId = oc.AddressDeliveryId } },
+                    PaymMode = oc.Payment,
+                    Factura = false,
+                    TotalWeight = 0,
+                    CurrencyId = oc.CurrencyId,
+                    TotalNetAmount = Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
+                    TaxAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")) - Decimal.Parse(oc.TotalNeto.Replace(".", ",")),
+                    TotalShippingAmount = Decimal.Parse(oc.TotalShipping.Replace(".", ",")),
+                    NetShippingAmount = Decimal.Parse(oc.NetShipping.Replace(".", ",")),
+                    TotalAmount = Decimal.Parse(oc.TotalFinal.Replace(".", ",")),
+                    TotalDicount = oc.TotalDiscounts,
+                    DetalleDeVentas = new DetalleDeVenta((from d in oc.Asociados.productos
+                    select new Detalle
+                    {
+                        ItemId = d.ProductId,
+                        Sku = d.Reference,
+                        SalesLineQty = Decimal.Parse(d.Cantidad.Replace(".", ",")),
+                        SalesLineNetPrice = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")),
+                        SalesLinePrice = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")),
+                        SalesLineNetTotalAmount = Decimal.Parse(d.PrecioSinImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ",")),
+                        SalesLineTotal = Decimal.Parse(d.PrecioConImpuesto.Replace(".", ",")) * Decimal.Parse(d.Cantidad.Replace(".", ","))
+                    }).ToList()),
+                    EstadoId = oc.CurrentState
+                }).ToList<OrdenDeVenta>();
 
                 List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
@@ -239,79 +230,123 @@ namespace IntegracionPrestashopLib.Operations
 
 
                             });
-                            /*Task tDoc = Task.Run(() =>
-                            {
-                                sbTraza.Append($"Iniciando búsqueda de datos facturacion para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                                String url = baseUrl.Replace("api", "WS");
-
-                                if (invoiceAddress.Other == "Factura")
-                                {
-                                    o.Factura = true;
-                                    Console.WriteLine("Compra con Factura");
-
-								}
-                                else
-                                {
-                                    o.Factura = false;
-                                    Console.WriteLine("Compra con boleta");
-                                }
-
-							});*/
                             tState.Wait();
                             tCustomDel.Wait();
-
-
-
-                            //tDoc.Wait();
+                            
                         }
                     });
 
-                    Task tPayments = Task.Run(() =>
-                    {
-                        sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                        var urlPayment = $"{baseUrl.Replace("api/", "WS/webpayinfo.php")}";
+                    // Tarea de enriquecimiento del pago (Webpay o Banco de Chile). Se ejecuta
+                    // de forma asíncrona y se espera junto al resto antes de retornar la orden.
+                    Task tPaymentInfo = null;
+                    if( o.PaymMode == WEBPAY ) {
+                        tPaymentInfo = Task.Run(() =>
+                        {
+                            sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                            String urlPayment = $"{baseUrl.Replace("api/", "WS/webpayinfo.php")}";
 
-                        var parametros = new Dictionary<string, string>();
-                        parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
-                        parametros.Add("cart_id", o.IdCart);
+                            Dictionary<string, string> parametros = new Dictionary<string, string>();
+                            parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
+                            parametros.Add("cart_id", o.IdCart);
 
-                        int idCart = 0;
-                        if (int.TryParse(o.IdCart, out idCart)) {
-                            decimal signature = ((o.SalesIdPrestaShop + 3) * 29) + (idCart * 17);
-                            parametros.Add("signature", signature.ToString().Replace(",", "."));
-                            var payment = PSOrdenClient.GetOrderPayment(urlPayment, parametros);
+                            int idCart = 0;
+                            if (int.TryParse(o.IdCart, out idCart)) {
+                                decimal signature = ((o.SalesIdPrestaShop + 3) * 29) + (idCart * 17);
+                                parametros.Add("signature", signature.ToString().Replace(",", "."));
+                                var payment = PSOrdenClient.GetOrderPayment(urlPayment, parametros);
 
-                            if (payment != null)
-                            {
-                                var tbkInfo = payment.transbank_response;
-
-                                o.TransactionInfo = new TransbankInfo
+                                if (payment != null)
                                 {
-                                    Token = payment.token,
-                                    AccountingDate = tbkInfo.accountingDate,
-                                    Amount = tbkInfo.amount,
-                                    AuthorizationCode = tbkInfo.authorizationCode,
-                                    Balance = tbkInfo.balance == null ? "" : tbkInfo.balance.ToString(),
-                                    BuyOrder = tbkInfo.buyOrder,
-                                    Card_number = tbkInfo.cardDetail.card_number,
-                                    InstallmentsAmount = tbkInfo.installmentsAmount == null ? "" : tbkInfo.installmentsAmount.ToString(),
-                                    InstallmentsNumber = tbkInfo.installmentsNumber == null ? "" : tbkInfo.installmentsNumber.ToString(),
-                                    PaymentTypeCode = tbkInfo.paymentTypeCode,
-                                    ResponseCode = tbkInfo.responseCode,
-                                    SessionId = tbkInfo.sessionId,
-                                    Status = tbkInfo.status,
-                                    TransactionDate = tbkInfo.transactionDate,
-                                    Vci = tbkInfo.vci
+                                    var tbkInfo = payment.transbank_response;
 
-                                };
+                                    o.TransactionInfo = new PaymentInfo
+                                    {
+                                        MedioPago = WEBPAY,
+                                        Token = payment.token,
+                                        AccountingDate = tbkInfo.accountingDate,
+                                        Amount = tbkInfo.amount,
+                                        AuthorizationCode = tbkInfo.authorizationCode,
+                                        Balance = tbkInfo.balance == null ? "" : tbkInfo.balance.ToString(),
+                                        BuyOrder = tbkInfo.buyOrder,
+                                        Card_number = tbkInfo.cardDetail.card_number,
+                                        InstallmentsAmount = tbkInfo.installmentsAmount == null ? "" : tbkInfo.installmentsAmount.ToString(),
+                                        InstallmentsNumber = tbkInfo.installmentsNumber == null ? "" : tbkInfo.installmentsNumber.ToString(),
+                                        PaymentTypeCode = tbkInfo.paymentTypeCode,
+                                        ResponseCode = tbkInfo.responseCode,
+                                        SessionId = tbkInfo.sessionId,
+                                        Status = tbkInfo.status,
+                                        TransactionDate = tbkInfo.transactionDate,
+                                        Vci = tbkInfo.vci
 
+                                    };
+
+                                }
+                                else
+                                {
+                                    o.TransactionInfo = new PaymentInfo { MedioPago = WEBPAY };
+                                }
                             }
-                            else
+                        });
+                    }
+                    else if( o.PaymMode == BCHILE)
+                    {
+                        tPaymentInfo = Task.Run(() =>
+                        {
+                            sbTraza.Append($"Iniciando búsqueda de datos Banco de Chile para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                            String urlPayment = $"{baseUrl.Replace("api/", "WS/banchileinfo.php")}";
+
+                            Dictionary<string, string> parametros = new Dictionary<string, string>();
+                            parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
+                            parametros.Add("cart_id", o.IdCart);
+
+                            int idCart = 0;
+                            if (int.TryParse(o.IdCart, out idCart))
                             {
-                                o.TransactionInfo = new TransbankInfo();
+                                decimal signature = ((o.SalesIdPrestaShop + 3) * 29) + (idCart * 17);
+                                parametros.Add("signature", signature.ToString().Replace(",", "."));
+                                var payment = PSOrdenClient.GetBanchilePayment(urlPayment, parametros);
+
+                                if (payment != null)
+                                {
+                                    int responseCode = 0;
+                                    int.TryParse(payment.Reason, out responseCode);
+
+                                    o.TransactionInfo = new PaymentInfo
+                                    {
+                                        MedioPago = BCHILE,
+                                        // Campos con nombre Transbank (concepto equivalente)
+                                        AuthorizationCode = payment.AuthCode,
+                                        Amount = (int)payment.Amount,
+                                        Card_number = payment.CardLastDigits,
+                                        InstallmentsNumber = payment.Installments,
+                                        TransactionDate = payment.Date,
+                                        Status = payment.ReasonDescription,
+                                        ResponseCode = responseCode,
+                                        // Campos propios de Banco de Chile
+                                        IdPayment = payment.IdPayment,
+                                        CartId = payment.IdOrder,
+                                        CurrencyId = payment.IdCurrency,
+                                        Franchise = payment.Franchise,
+                                        FranchiseName = payment.FranchiseName,
+                                        Bank = payment.Bank,
+                                        Receipt = payment.Receipt,
+                                        Conversion = payment.Conversion,
+                                        IpAddress = payment.IpAddress,
+                                        PayerEmail = payment.PayerEmail,
+                                        RequestId = payment.IdRequest,
+                                        Reference = payment.Reference
+                                    };
+                                }
+                                else
+                                {
+                                    o.TransactionInfo = new PaymentInfo { MedioPago = BCHILE };
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
+                    else {
+                        Console.WriteLine("Pago con " +  o.PaymMode);
+                    }
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
@@ -482,13 +517,24 @@ namespace IntegracionPrestashopLib.Operations
                     });
 
 
-                    tDiscounts.Wait();
-                    tComentario.Wait();
-                    tEstado.Wait();
-                    tCurrency.Wait();
-                    tInvoiceAdd.Wait();
-                    tDeliveryAddress.Wait();
-                    tCustomer.Wait();
+                    // Esperar a que TODAS las tareas de la orden terminen antes de continuar
+                    // (incluida la del pago: Webpay/Banco de Chile). Así la lista de órdenes
+                    // se retorna recién cuando cada orden está completamente enriquecida.
+                    List<Task> ordenTasks = new List<Task>
+                    {
+                        tDiscounts,
+                        tComentario,
+                        tEstado,
+                        tCurrency,
+                        tInvoiceAdd,
+                        tDeliveryAddress,
+                        tCustomer
+                    };
+                    if (tPaymentInfo != null)
+                    {
+                        ordenTasks.Add(tPaymentInfo);
+                    }
+                    Task.WaitAll(ordenTasks.ToArray());
 
                     if (o.Facturacion.LiteralBusiness == "Factura")
                     {
@@ -524,6 +570,8 @@ namespace IntegracionPrestashopLib.Operations
                 };
             }
         }
+
+
 
         private void AplicarFactorADetalles(decimal finalPriceProportion, List<Detalle> prods)
         {

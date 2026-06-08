@@ -68,7 +68,7 @@
     <Compile Include="Schema\ERP\Comentarios.cs" />
     <Compile Include="Schema\ERP\Inventario.cs" />
     <Compile Include="Schema\ERP\Tracking.cs" />
-    <Compile Include="Schema\ERP\TransbankInfo.cs" />
+    <Compile Include="Schema\ERP\PaymentInfo.cs" />
     <Compile Include="Schema\PS\Address.cs" />
     <Compile Include="Schema\PS\Combination.cs" />
     <Compile Include="Schema\PS\Responses\CartRuleResponse.cs" />
@@ -130,6 +130,7 @@
     <Compile Include="Schema\PS\tDoc.cs" />
     <Compile Include="Schema\PS\Tupla.cs" />
     <Compile Include="Schema\PS\WPPayment.cs" />
+    <Compile Include="Schema\PS\BanchilePayment.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Exceptions\" />

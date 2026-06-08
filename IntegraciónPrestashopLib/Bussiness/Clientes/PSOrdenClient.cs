@@ -26,7 +26,9 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
             sbTraza.Append($"Consultando ordenes desde {fechaIni.ToString("dd/MM/yyyy HH:mm:ss")} hasta {fechaFin.ToString("dd/MM/yyyy HH:mm:ss")} {Environment.NewLine}");
 
-            String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
+            String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[2|3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
+            sbTraza.Append($"URL:  {url}  {Environment.NewLine}");
+
             
             try
             {
@@ -73,10 +75,34 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 count++;
             }
             string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
-            
+
             var payment =(response != "0 results\r\n")? JsonConvert.DeserializeObject<PaymentResponse>(response): null;
             return payment;
-            
+
+        }
+
+        internal static BanchilePayment GetBanchilePayment(String prestashopUrl, Dictionary<String, String> parametros)
+        {
+
+            string method = "GET";
+
+            StringBuilder sb = new StringBuilder(prestashopUrl);
+            int count = 0;
+            foreach (var dic in parametros)
+            {
+                if (count == 0)
+                    sb.Append("?");
+                else
+                    sb.Append("&");
+
+                sb.Append($"{dic.Key}={dic.Value}");
+                count++;
+            }
+            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
+
+            var payment = (response != "0 results\r\n" && response.TrimStart().StartsWith("{")) ? JsonConvert.DeserializeObject<BanchilePayment>(response) : null;
+            return payment;
+
         }
 
         internal static CartRulesResponse[] GetCartRules(String prestashopUrl, Dictionary<String, String> parametros)

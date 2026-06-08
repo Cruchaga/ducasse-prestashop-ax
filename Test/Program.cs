@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text;
+using IntegracionEnviame.Schema.Requests;
+using IntegracionEnviame.Schema.Responses;
 
 namespace Test
 {
@@ -32,7 +34,7 @@ namespace Test
             IntegracionPrestashopLib.Schema.ERP.Direccion oDeliveryAddress;
             IntegracionPrestashopLib.Schema.ERP.Despacho oDelivery;
             IntegracionPrestashopLib.Schema.ERP.Detalle oSalesLine;
-            IntegracionPrestashopLib.Schema.ERP.TransbankInfo oTransbankInfo;
+            IntegracionPrestashopLib.Schema.ERP.PaymentInfo oTransbankInfo;
 
             int iterOrders;
             long salesOrderId;
@@ -64,21 +66,20 @@ namespace Test
             Decimal lineQty;
 
 
-            //String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";//dap ducasse
-            String eShopApiKey = "PWYRQDRTIQX125QYBZSI5AV91B32YCNR"; //stock insumos
+            String eShopApiKey = "X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F";//dap ducasse
+            //String eShopApiKey = "PWYRQDRTIQX125QYBZSI5AV91B32YCNR"; //stock insumos
             //String eShopUri = "https://intermedio.dapducasse.cl/api/";
             //String eShopUri = "https://dapducasse.cl/api/";
-            String eShopUri = "https://stockinsumos.cl/api/";
+            //String eShopUri = "https://dapducasse.cl/api/";
+            String eShopUri = "https://bch.dapducasse.cl/api/";
+            //String eShopUri = "https://stockinsumos.cl/api/";
             int eShopUser = 8;
 
             oApiOrdenDal = new IntegracionPrestashopLib.Operations.OrdenDAL(eShopApiKey, eShopUri, eShopUser);
 
-            DateTime _startDateTime = DateTime.Parse("2024-09-28 00:00");
-            //DateTime _startDateTime = DateTime.Parse("2023-03-01 00:00");
-            DateTime _endDateTime = DateTime.Parse("2024-10-05 12:15");
-            //DateTime _endDateTime = DateTime.Parse("2023-03-01 16:30");
-
-
+            DateTime _startDateTime = DateTime.Parse("2026-06-06 00:05");
+            DateTime _endDateTime = DateTime.Parse("2026-06-07 23:55");
+            
 
 
             oOrdenes = oApiOrdenDal.GetOrdenes(_startDateTime, _endDateTime);
@@ -91,6 +92,19 @@ namespace Test
                 {
                     //- Set object values to local variables
                     oSalesOrder = oOrdenes.GetOrden(iterOrders);
+
+                    decimal sumaneto = 0;
+                    decimal sumatotal = 0;
+
+                    for (int prodI = 0; prodI < oSalesOrder.DetalleDeVentas.GetSize(); prodI++)
+                    {
+
+                        sumaneto += oSalesOrder.DetalleDeVentas.GetItemDetalle(prodI).SalesLineNetTotalAmount;
+                        sumatotal += oSalesOrder.DetalleDeVentas.GetItemDetalle(prodI).SalesLineTotal;
+                    }
+                    Console.WriteLine(sumaneto.ToString());
+                    Console.WriteLine(sumatotal.ToString());    
+
                     salesOrderId = oSalesOrder.SalesIdPrestaShop;
 
                     String strPrestaShopRef = oSalesOrder.Referencia;
@@ -101,8 +115,8 @@ namespace Test
                     Decimal totalTax = oSalesOrder.TaxAmount;
                     Decimal shippingCost = oSalesOrder.NetShippingAmount;
                     //- Transaction Code
-                    oTransbankInfo = oSalesOrder.TransactionInfo;
-                    String strTransactionCode = oTransbankInfo.BuyOrder;
+                    //oTransbankInfo = oSalesOrder.TransactionInfo;
+                    //String strTransactionCode = oTransbankInfo.BuyOrder;
                     //- Comentarios
 
                     oComentarios = oSalesOrder.Mensajes;
@@ -319,15 +333,63 @@ namespace Test
                 }
             }
 
-
+            Console.WriteLine("Finished");
 
 
         }
 
+
+        static void testEnviame()
+        {
+            Operaciones enviame1 = new Operaciones("e929b266be19863968b5f9253a81d14c", "https://api.enviame.io/api/s2/v2/", 3539);
+
+            IntegracionEnviame.Schema.Responses.VerTrackingResponse tracking = enviame1.VerTracking(124442754);
+
+            CrearEnvioRequest oSendRequest = new IntegracionEnviame.Schema.Requests.CrearEnvioRequest();
+            Destino oDestino = new IntegracionEnviame.Schema.Requests.Destino();
+            Orden oOrden = new IntegracionEnviame.Schema.Requests.Orden();
+            
+            //- Orden
+            oOrden.CantidadBultos = 1;
+            oOrden.CodBodegaOrigen = "1201-CWD";
+            oOrden.DescripcionContenido = "Material para terminaciones";
+            oOrden.IdReferencia = "AAA";
+            oOrden.Set_PesoTotal(0, 0);
+            oOrden.Set_VolumenTotal(0,0);
+            oOrden.Precio = 15000;
+            //- Destino
+            oDestino.Comuna = "Las Condes";
+            oDestino.DireccionCompleta = "Apoquindo 5555";
+            oDestino.EmailReceptor = "test@test.com";
+            oDestino.NombreReceptor = "Juanito Perez";
+            oDestino.Informacion = "Informacion";
+            oDestino.TelefonoReceptor = "+56984418520";
+
+            //-
+            String serviceType = "nextday";
+            oSendRequest.Carrier = "CHX";
+            oSendRequest.CarrierService = serviceType;
+            oSendRequest.Destino = oDestino;
+            oSendRequest.Orden = oOrden;
+            //- Create delivery
+            CrearEnvioResponse oSendResponse = enviame1.CrearEnvio(oSendRequest);
+            Console.WriteLine(oSendResponse.TrackingNumber);
+            
+        }
+        
+        
         static void Main(string[] args)
         {
             try
             {
+
+                //testEnviame();
+                //return;
+                //Operaciones enviame1 = new Operaciones("e929b266be19863968b5f9253a81d14c", "https://api.enviame.io/api/s2/v2/", 3539);
+                //  IntegracionEnviame.Schema.Responses.VerTrackingResponse tracking = enviame1.VerTracking(124442754);
+
+
+
                 //IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://dapducasse.cl/api/", 8);
                 IntegracionPrestashopLib.Operations.OrdenDAL oOrdenDAL = new IntegracionPrestashopLib.Operations.OrdenDAL("PWYRQDRTIQX125QYBZSI5AV91B32YCNR", "http://stockinsumos.cl/api/", 8);
                 //IntegracionPrestashopLib.Operations.ProductoDAL oProductoDAL = new IntegracionPrestashopLib.Operations.ProductoDAL("X65SKAWDWMBK4QY5B58Q4ABE9EYPW54F", "https://dapducasse.cl/api/");
@@ -335,8 +397,8 @@ namespace Test
 
                 Program pr = new Program();
 
-                //AxSymTest();
-                //return;
+                AxSymTest();
+                return;
 
                 Console.WriteLine(oProductoDAL.TestDateTime(DateTime.Now));
 

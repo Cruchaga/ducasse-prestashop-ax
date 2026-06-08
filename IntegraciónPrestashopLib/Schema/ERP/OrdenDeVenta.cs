@@ -20,7 +20,7 @@ namespace IntegracionPrestashopLib.Schema.ERP
         public Despacho Despacho { get; set; }
         public String PaymMode { get; set; }
         public String Referencia { get; set; }
-        public TransbankInfo TransactionInfo { get; set; }
+        public PaymentInfo TransactionInfo { get; set; }
         public Boolean Factura { get; set; }
         public Decimal TotalWeight { get; set; }
         internal String CurrencyId { get; set; }

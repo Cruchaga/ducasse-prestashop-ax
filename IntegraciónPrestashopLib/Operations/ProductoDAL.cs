@@ -79,8 +79,8 @@ namespace IntegracionPrestashopLib.Operations
 
         public object GetProducto(string itemId_InventDimId)
         {
-            StringBuilder sbTraza = new StringBuilder();
-            var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+            Traza sbTraza = new Traza();
+            var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
             if (prodResult == null || prodResult.products == null)
             {
                 return new UpdateResponse
@@ -100,8 +100,8 @@ namespace IntegracionPrestashopLib.Operations
         {
             try
             {
-                StringBuilder sbTraza = new StringBuilder();
-                var prodResult = psProducto.GetRecursoWithFilter("products", producto.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{producto.ItemId_InventDimId}]&display=full", ref sbTraza);
+                Traza sbTraza = new Traza();
+                var prodResult = psProducto.GetRecursoWithFilter("products", producto.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{producto.ItemId_InventDimId}]&display=full", sbTraza);
                 if (prodResult == null || prodResult.products == null)
                 {
                     return new UpdateResponse
@@ -134,11 +134,11 @@ namespace IntegracionPrestashopLib.Operations
                 String urlPrice = "";
                 Dictionary<String, String> parametros = new Dictionary<String, String>();
 
-                var sbTraza = new StringBuilder();
-                var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+                Traza sbTraza = new Traza();
+                var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                 if (prodResult == null || prodResult.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null)
                     {
 
@@ -154,11 +154,11 @@ namespace IntegracionPrestashopLib.Operations
                         Schema.PS.Combination combProd = comb.products[0];
                         urlPrice = $"{baseUrl.Replace("api/", "WS/combination_price.php")}";
 
-                        parametros.Add("price", netPrice.ToString().Replace(",", "."));
+                        parametros.Add("price", Functions.ToInvariant(netPrice));
                         parametros.Add("id_product", combProd.ProductId.ToString());
                         parametros.Add("id_prod_attribute", combProd.CombinationId.ToString());
                         decimal signature = ((netPrice + 1) * 6) + (int.Parse(combProd.ProductId) * 17);
-                        parametros.Add("signature", signature.ToString().Replace(",", "."));
+                        parametros.Add("signature", Functions.ToInvariant(signature));
                     }
                 }
                 else
@@ -166,10 +166,10 @@ namespace IntegracionPrestashopLib.Operations
                     prod = prodResult.products[0];
                     urlPrice = $"{baseUrl.Replace("api/", "WS/price.php")}";
 
-                    parametros.Add("price", netPrice.ToString().Replace(",", "."));
+                    parametros.Add("price", Functions.ToInvariant(netPrice));
                     parametros.Add("id_product", prod.ProductId.ToString());
                     decimal signature = ((netPrice + 1) * 7) + (prod.ProductId * 17);
-                    parametros.Add("signature", signature.ToString().Replace(",", "."));
+                    parametros.Add("signature", Functions.ToInvariant(signature));
                 }
                 return PSProductoClient.UpdatePrice(urlPrice, parametros);
             }catch(Exception e)
@@ -191,12 +191,12 @@ namespace IntegracionPrestashopLib.Operations
         {
             try
             {
-                var sbTraza = new StringBuilder();
+                Traza sbTraza = new Traza();
 
-                var prod = psProducto.GetRecursoWithFilter("products", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", ref sbTraza);
+                var prod = psProducto.GetRecursoWithFilter("products", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
                 if (prod == null || prod.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", ref sbTraza);
+                    var comb = psCombinacion.GetRecursoWithFilter("combinations", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null) {
                         return new UpdateResponse
                         {
@@ -221,17 +221,17 @@ namespace IntegracionPrestashopLib.Operations
 
         private UpdateResponse UpdateStock(String stockProd, int prodID)
         {
-            var sbTraza = new StringBuilder();
+            Traza sbTraza = new Traza();
 
-            var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", ref sbTraza);
+            var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", sbTraza);
             stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
         private UpdateResponse UpdateStock(String stockProd,  String prodID, int combinationId)
         {
-            var sbTraza = new StringBuilder();
+            Traza sbTraza = new Traza();
 
-            var stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", ref sbTraza);
+            var stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", sbTraza);
             stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
@@ -240,14 +240,14 @@ namespace IntegracionPrestashopLib.Operations
         {
             try
             {
-                var sbTraza = new StringBuilder();
-                var prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+                Traza sbTraza = new Traza();
+                var prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
 
                 StockAvailableRepsonse stock = new StockAvailableRepsonse();
                 int stockSalida = 0;
                 if (prod == null || prod.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", ref sbTraza);
+                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null)
                     {
                         return new InventarioResponse
@@ -260,12 +260,12 @@ namespace IntegracionPrestashopLib.Operations
                     }
                     String prodID = comb.products[0].ProductId;
                     var combinationId = comb.products[0].CombinationId;
-                    stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", ref sbTraza);
+                    stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", sbTraza);
                 }
                 else
                 {
                     int prodID = prod.products[0].ProductId;
-                    stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", ref sbTraza);
+                    stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", sbTraza);
                 }
 
                 if (int.TryParse(stock.Stock[0].Stock, out stockSalida))

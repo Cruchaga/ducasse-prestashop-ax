@@ -57,6 +57,7 @@
     <Compile Include="Bussiness\Clientes\PSRecursoClient.cs" />
     <Compile Include="Bussiness\Util\Functions.cs" />
     <Compile Include="Bussiness\Util\HttpRequestFunctions.cs" />
+    <Compile Include="Bussiness\Util\Traza.cs" />
     <Compile Include="Schema\PS\ProductBundle.cs" />
     <Compile Include="Schema\PS\AssociatedCategory.cs" />
     <Compile Include="Schema\PS\ProductBundles.cs" />

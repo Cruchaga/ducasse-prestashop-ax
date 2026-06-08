@@ -25,16 +25,15 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
         {
             this.finalClass = namClass;
         }
-        internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl, ref StringBuilder sbTraza)
+        internal V GetRecurso(String recurso, String recursoId, String apiKey, String baseUrl, Traza sbTraza)
         {
-            Console.WriteLine($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
-            sbTraza.Append($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
+            sbTraza.Log($"Buscando {recurso} con id {recursoId} ");
             Stopwatch sw = new Stopwatch();
             sw.Start();
             if (resources == null)
                 resources = new Hashtable();
             if (resources[recursoId] == null)
-                ObtenerRecurso(recurso, $"/{recursoId}", apiKey, baseUrl, "", ref sbTraza);
+                ObtenerRecurso(recurso, $"/{recursoId}", apiKey, baseUrl, "", sbTraza);
             else
                 Console.WriteLine($"Recurso {recursoId} enconctrado en lista de {recurso} con {resources.Count} recursos guardados");
             sw.Stop();
@@ -46,7 +45,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
             return (V)resources[$"/{recursoId}"];
         }
-        internal V GetRecursoWithFilter(String recurso, String recursoId, String apiKey, String baseUrl, String filtro, ref StringBuilder sbTraza)
+        internal V GetRecursoWithFilter(String recurso, String recursoId, String apiKey, String baseUrl, String filtro, Traza sbTraza)
         {
             sbTraza.Append($"Buscando {recurso} con id {recursoId} {Environment.NewLine}");
             Stopwatch sw = new Stopwatch();
@@ -54,7 +53,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             if (resources == null)
                 resources = new Hashtable();
             if (resources[recursoId] == null)
-                ObtenerRecursoWithFilter(recurso, recursoId, apiKey, baseUrl, filtro, ref sbTraza);
+                ObtenerRecursoWithFilter(recurso, recursoId, apiKey, baseUrl, filtro, sbTraza);
             else
                 Console.WriteLine($"Recurso {recursoId} enconctrado en lista de {recurso} con {resources.Count} recursos guardados");
             sw.Stop();
@@ -66,7 +65,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             return (V)resources[recursoId];
         }
 
-        /*public Decimal getCombinationPrice(string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
+        /*public Decimal getCombinationPrice(string recursoId, String apiKey, String baseUrl, String filtros, Traza sbTraza)
         {
             String recurso = "combinations";
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
@@ -109,7 +108,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 
         }*/
 
-        private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
+        private void ObtenerRecurso(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, Traza sbTraza)
         {
             String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
             String url = $"{baseUrl}{recurso}{recursoId}?output_format=JSON{filtros}";
@@ -153,7 +152,7 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             return jsonResources[id].ToString();
         }
 
-        private void ObtenerRecursoWithFilter(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, ref StringBuilder sbTraza)
+        private void ObtenerRecursoWithFilter(String recurso, string recursoId, String apiKey, String baseUrl, String filtros, Traza sbTraza)
         {
             String url = "";
             String base64 = "";

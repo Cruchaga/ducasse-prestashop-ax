@@ -1,4 +1,4 @@
-﻿using IntegracionPrestashopLib.Bussiness.Util;
+using IntegracionPrestashopLib.Bussiness.Util;
 using IntegracionPrestashopLib.Schema.Dictionary;
 using IntegracionPrestashopLib.Schema.PS;
 using IntegracionPrestashopLib.Schema.PS.Request;
@@ -21,18 +21,24 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
 {
     internal class PSOrdenClient
     {
-        internal static OrdenesResponse GetOrdenes(DateTime fechaIni, DateTime fechaFin, String apiKey, String prestashopUrlBase, ref StringBuilder sbTraza)
+        private const string NoResults = "0 results\r\n";
+
+        /// <summary>Arma el header Basic (apiKey como usuario, sin password) en base64.</summary>
+        private static string BuildAuthHeader(string apiKey)
         {
-            String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+            return Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
+        }
+
+        internal static OrdenesResponse GetOrdenes(DateTime fechaIni, DateTime fechaFin, String apiKey, String prestashopUrlBase, Traza sbTraza)
+        {
+            string base64 = BuildAuthHeader(apiKey);
             sbTraza.Append($"Consultando ordenes desde {fechaIni.ToString("dd/MM/yyyy HH:mm:ss")} hasta {fechaFin.ToString("dd/MM/yyyy HH:mm:ss")} {Environment.NewLine}");
 
-            String url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[2|3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
+            string url = $"{prestashopUrlBase}orders?display=full&date=1&filter[current_state]=[2|3]&filter[date_add]=[{fechaIni.ToString("yyyy-MM-dd'%20'HH:mm:ss")},{fechaFin.ToString("yyyy-MM-dd'%20'HH:mm:ss")}]&output_format=JSON";
             sbTraza.Append($"URL:  {url}  {Environment.NewLine}");
 
-            
             try
             {
-
                 string s = HttpRequestFunctions.GetRequest(url, base64);
                 OrdenesResponse resp = new OrdenesResponse
                 {
@@ -47,106 +53,65 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Excepcion: {e.Message}");
-                sbTraza.Append($"Error al obtener ordenes [{e.Message}]{Environment.NewLine}");
+                sbTraza.Log($"Excepcion al obtener ordenes: {e.Message}");
                 return new OrdenesResponse
                 {
                     Orders = new List<OrdenDeCompra>(),
-                    
                 };
             }
         }
 
         internal static PaymentResponse GetOrderPayment(String prestashopUrl, Dictionary<String, String> parametros)
         {
+            string url = Functions.BuildQueryUrl(prestashopUrl, parametros);
+            string response = HttpRequestFunctions.Request(url, "", "GET");
 
-            string method = "GET";
-
-            StringBuilder sb = new StringBuilder(prestashopUrl);
-            int count = 0;
-            foreach(var dic in parametros)
-            {
-                if (count == 0)
-                    sb.Append("?");
-                else
-                    sb.Append("&");
-
-                sb.Append($"{dic.Key}={dic.Value}");
-                count++;
-            }
-            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
-
-            var payment =(response != "0 results\r\n")? JsonConvert.DeserializeObject<PaymentResponse>(response): null;
+            PaymentResponse payment = (response != NoResults)
+                ? JsonConvert.DeserializeObject<PaymentResponse>(response)
+                : null;
             return payment;
-
         }
 
         internal static BanchilePayment GetBanchilePayment(String prestashopUrl, Dictionary<String, String> parametros)
         {
+            string url = Functions.BuildQueryUrl(prestashopUrl, parametros);
+            string response = HttpRequestFunctions.Request(url, "", "GET");
 
-            string method = "GET";
-
-            StringBuilder sb = new StringBuilder(prestashopUrl);
-            int count = 0;
-            foreach (var dic in parametros)
-            {
-                if (count == 0)
-                    sb.Append("?");
-                else
-                    sb.Append("&");
-
-                sb.Append($"{dic.Key}={dic.Value}");
-                count++;
-            }
-            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
-
-            var payment = (response != "0 results\r\n" && response.TrimStart().StartsWith("{")) ? JsonConvert.DeserializeObject<BanchilePayment>(response) : null;
+            BanchilePayment payment = (response != NoResults && response.TrimStart().StartsWith("{"))
+                ? JsonConvert.DeserializeObject<BanchilePayment>(response)
+                : null;
             return payment;
-
         }
 
         internal static CartRulesResponse[] GetCartRules(String prestashopUrl, Dictionary<String, String> parametros)
         {
+            string url = Functions.BuildQueryUrl(prestashopUrl, parametros);
+            string response = HttpRequestFunctions.Request(url, "", "GET");
 
-            string method = "GET";
-
-            StringBuilder sb = new StringBuilder(prestashopUrl);
-            int count = 0;
-            foreach(var dic in parametros)
-            {
-                if (count == 0)
-                    sb.Append("?");
-                else
-                    sb.Append("&");
-
-                sb.Append($"{dic.Key}={dic.Value}");
-                count++;
-            }
-            string response = HttpRequestFunctions.Request(sb.ToString(), "", method);
             if (response.StartsWith("["))
             {
-                var cartRules = JsonConvert.DeserializeObject<CartRulesResponse[]>(response);
+                CartRulesResponse[] cartRules = JsonConvert.DeserializeObject<CartRulesResponse[]>(response);
                 return cartRules;
             }
-            else
-                return null;
-            
+
+            return null;
         }
+
         internal static UpdateResponse UpdateTracking(OrderHistory orden, String apiKey, String prestashopUrlBase)
         {
-            String base64 = Convert.ToBase64String(System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes($"{apiKey}:"));
-            String sendmail = orden.Informar ? "1" : "0";
-            String url = $"{prestashopUrlBase}order_histories/{orden.OrderId}?sendemail={sendmail}";
+            string base64 = BuildAuthHeader(apiKey);
+            string sendmail = orden.Informar ? "1" : "0";
+            string url = $"{prestashopUrlBase}order_histories/{orden.OrderId}?sendemail={sendmail}";
             string method = "POST";
 
-            var obj = new TrackingRequest
+            TrackingRequest obj = new TrackingRequest
             {
                 Tracking = orden
             };
-            String track = Functions.SerializeXML(obj);
+            string track = Functions.SerializeXML(obj);
             try
             {
-                var response = HttpRequestFunctions.Request(base64, url, track, method);
+                string response = HttpRequestFunctions.Request(base64, url, track, method);
                 return new UpdateResponse
                 {
                     Actualizado = true
@@ -154,8 +119,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
             }
             catch (WebException wex)
             {
-                var sr = new StreamReader(wex.Response.GetResponseStream());
-                var pageContent = sr.ReadToEnd();
+                StreamReader sr = new StreamReader(wex.Response.GetResponseStream());
+                string pageContent = sr.ReadToEnd();
                 sr.Close();
                 return new UpdateResponse
                 {

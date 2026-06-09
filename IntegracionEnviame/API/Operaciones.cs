@@ -106,7 +106,7 @@ namespace IntegracionEnviame.API
                 {
                     Creado = false,
                     ErrorCode = -1,
-                    ErrorDescription = $"Error al crear el envío: {{{e.Message}}}"
+                    ErrorDescription = $"Error al crear el envío: {{{e.Message}}} - {{{e.StackTrace}}}"
                 };
             }
         }
@@ -253,7 +253,7 @@ namespace IntegracionEnviame.API
                 return new VerTrackingResponse
                 {
                     CodigoEstado = "0",
-                    Descripcion = $"Error al ver tracking: {{{e.Message}}}"
+                    Descripcion = $"Error al ver tracking: {{{e.Message}}} - {{{e.StackTrace}}} "
                 };
             }
         }

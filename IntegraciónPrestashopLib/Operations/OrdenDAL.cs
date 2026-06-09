@@ -130,236 +130,18 @@ namespace IntegracionPrestashopLib.Operations
                     EstadoId = oc.CurrentState
                 }).ToList<OrdenDeVenta>();
 
-                List<Task> tasks = new List<Task>();
                 resp.ForEach(o =>
                 {
 
-                    Task tProducts = Task.Run(() =>
-                    {
-                        List<Detalle> itemsTemp = o.DetalleDeVentas.itemsVendidos;
-                        o.DetalleDeVentas.itemsVendidos = new List<Detalle>();
+                    Task tProducts = Task.Run(() => EnriquecerProductos(o, sbTraza));
+                    Task tEstado = Task.Run(() => EnriquecerEstado(o, sbTraza));
+                    Task tCustomer = Task.Run(() => EnriquecerCliente(o, sbTraza));
+                    Task tCurrency = Task.Run(() => EnriquecerMoneda(o, sbTraza));
+                    Task tInvoiceAdd = Task.Run(() => EnriquecerDireccionFactura(o, sbTraza));
 
-                        foreach (Detalle prod in itemsTemp)
-                        {
-                            sbTraza.Append($"Revisando si {prod.ItemId} es un producto compuesto, para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                            ProductResponse productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, sbTraza);
-                            if (productResp != null)
-                            {
-                                if(productResp.Product.CacheIsPack != "1")
-                                {
-                                    o.DetalleDeVentas.itemsVendidos.Add(prod);
-                                    prod.Categories = productResp.Product.Associations.categories;
-                                }
-                                else
-                                {
-                                    List<Detalle> openedItemsTemp = OpenPackDetail(prod, sbTraza);
-                                    foreach (Detalle item in openedItemsTemp)
-                                    {
-                                        o.DetalleDeVentas.itemsVendidos.Add(item);
-                                    }
-                                }
-                            }
-                        }
-
-                    });
-
-                    Customer customer;
-                    Task tEstado = Task.Run(() =>
-                    {
-                        sbTraza.Append($"Iniciando búsqueda de estado para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                        EstadoResponse estadoResp = psEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl, sbTraza);
-                        if (estadoResp != null)
-                        {
-                            Estado estado = estadoResp.estado;
-                            o.Estado = estado.Nombres;
-                        }
-                    });
-
-                    Task tCustomer = Task.Run(() =>
-                    {
-                        sbTraza.Append($"Iniciando búsqueda de cliente para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                        CustomerResponse customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl, sbTraza);
-                        if (customerResp != null)
-                        {
-                            customer = customerResp.Clientes;
-                            o.CustomerName = $"{customer.Nombre} {customer.Apellido}";
-                            o.CustomerEmail = customer.Email;
-                        }
-                    });
-
-                    Task tCurrency = Task.Run(() =>
-                    {
-                        sbTraza.Append($"Iniciando búsqueda de currency para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                        CurrencyResponse currencyRep = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl, sbTraza);
-                        if (currencyRep != null)
-                        {
-                            Currency currency = currencyRep.Currency;
-                            o.CurrencyCode = currency.CurrencyCode;
-                            o.DetalleDeVentas.itemsVendidos.ForEach(d =>
-                            {
-                                d.SalesLineCurrencyCode = currency.CurrencyCode;
-                            });
-                        }
-                    });
-                    Task tInvoiceAdd = Task.Run(() => 
-                    {
-                        sbTraza.Log($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} ");
-                        AddressResponse invoiceAddressResp = psDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl, sbTraza);
-                        if (invoiceAddressResp != null)
-                        {
-                            Address invoiceAddress = invoiceAddressResp.Address;
-                            o.Facturacion.Direccion.AddressCity = invoiceAddress.Ciudad;
-                            o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
-                            o.Facturacion.PhoneNumber = invoiceAddress.Phone;
-                            o.Facturacion.CustNameInvoice = invoiceAddress.Company == "" ? $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}" : invoiceAddress.Company;
-                            o.Facturacion.Rut = invoiceAddress.RutEmpresa.Trim();
-                            o.Facturacion.LiteralBusiness = invoiceAddress.Other;
-
-
-
-
-
-                            Task tState = Task.Run(() =>
-                            {
-                                sbTraza.Append($"Iniciando búsqueda de estado para dirección {o.Facturacion.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                                StateResponse comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl, sbTraza);
-
-                                if (comunaResp != null)
-                                {
-                                    string codComuna = GetStringDecimalFromHexa(comunaResp.State.StateCode);
-                                    o.Facturacion.Direccion.AddressCounty = codComuna;
-                                }
-                            });
-
-                            Task tCustomDel = Task.Run(() =>
-                            {
-                                sbTraza.Append($"Iniciando búsqueda de cliente en direcccion {o.Facturacion.Direccion.AddressId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                                CustomerResponse customerDeliveryResp = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl, sbTraza);
-                                if (customerDeliveryResp != null)
-                                {
-                                    Customer customerDelivery = customerDeliveryResp.Clientes;
-                                    o.Facturacion.EmailInvoice = customerDelivery.Email;
-                                }
-
-
-                            });
-                            tState.Wait();
-                            tCustomDel.Wait();
-                            
-                        }
-                    });
-
-                    // Tarea de enriquecimiento del pago (Webpay o Banco de Chile). Se ejecuta
-                    // de forma asíncrona y se espera junto al resto antes de retornar la orden.
-                    Task tPaymentInfo = null;
-                    if( o.PaymMode == WEBPAY ) {
-                        tPaymentInfo = Task.Run(() =>
-                        {
-                            sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                            String urlPayment = WsUrl("webpayinfo.php");
-
-                            Dictionary<string, string> parametros = new Dictionary<string, string>();
-                            parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
-                            parametros.Add("cart_id", o.IdCart);
-
-                            int idCart = 0;
-                            if (int.TryParse(o.IdCart, out idCart)) {
-                                decimal signature = CalcularFirmaPago(o.SalesIdPrestaShop, idCart);
-                                parametros.Add("signature", Functions.ToInvariant(signature));
-                                PaymentResponse payment = PSOrdenClient.GetOrderPayment(urlPayment, parametros);
-
-                                if (payment != null)
-                                {
-                                    WPPayment tbkInfo = payment.transbank_response;
-
-                                    o.TransactionInfo = new PaymentInfo
-                                    {
-                                        MedioPago = WEBPAY,
-                                        Token = payment.token,
-                                        AccountingDate = tbkInfo.accountingDate,
-                                        Amount = tbkInfo.amount,
-                                        AuthorizationCode = tbkInfo.authorizationCode,
-                                        Balance = tbkInfo.balance == null ? "" : tbkInfo.balance.ToString(),
-                                        BuyOrder = tbkInfo.buyOrder,
-                                        Card_number = tbkInfo.cardDetail.card_number,
-                                        InstallmentsAmount = tbkInfo.installmentsAmount == null ? "" : tbkInfo.installmentsAmount.ToString(),
-                                        InstallmentsNumber = tbkInfo.installmentsNumber == null ? "" : tbkInfo.installmentsNumber.ToString(),
-                                        PaymentTypeCode = tbkInfo.paymentTypeCode,
-                                        ResponseCode = tbkInfo.responseCode,
-                                        SessionId = tbkInfo.sessionId,
-                                        Status = tbkInfo.status,
-                                        TransactionDate = tbkInfo.transactionDate,
-                                        Vci = tbkInfo.vci
-
-                                    };
-
-                                }
-                                else
-                                {
-                                    o.TransactionInfo = new PaymentInfo { MedioPago = WEBPAY };
-                                }
-                            }
-                        });
-                    }
-                    else if( o.PaymMode == BCHILE)
-                    {
-                        tPaymentInfo = Task.Run(() =>
-                        {
-                            sbTraza.Append($"Iniciando búsqueda de datos Banco de Chile para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                            String urlPayment = WsUrl("banchileinfo.php");
-
-                            Dictionary<string, string> parametros = new Dictionary<string, string>();
-                            parametros.Add("order_id", o.SalesIdPrestaShop.ToString().Replace(",", "."));
-                            parametros.Add("cart_id", o.IdCart);
-
-                            int idCart = 0;
-                            if (int.TryParse(o.IdCart, out idCart))
-                            {
-                                decimal signature = CalcularFirmaPago(o.SalesIdPrestaShop, idCart);
-                                parametros.Add("signature", Functions.ToInvariant(signature));
-                                BanchilePayment payment = PSOrdenClient.GetBanchilePayment(urlPayment, parametros);
-
-                                if (payment != null)
-                                {
-                                    int responseCode = 0;
-                                    int.TryParse(payment.Reason, out responseCode);
-
-                                    o.TransactionInfo = new PaymentInfo
-                                    {
-                                        MedioPago = BCHILE,
-                                        // Campos con nombre Transbank (concepto equivalente)
-                                        AuthorizationCode = payment.AuthCode,
-                                        Amount = (int)payment.Amount,
-                                        Card_number = payment.CardLastDigits,
-                                        InstallmentsNumber = payment.Installments,
-                                        TransactionDate = payment.Date,
-                                        Status = payment.ReasonDescription,
-                                        ResponseCode = responseCode,
-                                        // Campos propios de Banco de Chile
-                                        IdPayment = payment.IdPayment,
-                                        CartId = payment.IdOrder,
-                                        CurrencyId = payment.IdCurrency,
-                                        Franchise = payment.Franchise,
-                                        FranchiseName = payment.FranchiseName,
-                                        Bank = payment.Bank,
-                                        Receipt = payment.Receipt,
-                                        Conversion = payment.Conversion,
-                                        IpAddress = payment.IpAddress,
-                                        PayerEmail = payment.PayerEmail,
-                                        RequestId = payment.IdRequest,
-                                        Reference = payment.Reference
-                                    };
-                                }
-                                else
-                                {
-                                    o.TransactionInfo = new PaymentInfo { MedioPago = BCHILE };
-                                }
-                            }
-                        });
-                    }
-                    else {
-                        Console.WriteLine("Pago con " +  o.PaymMode);
-                    }
+                    // Enriquecimiento del pago (Webpay o Banco de Chile). Se ejecuta de forma
+                    // asíncrona y se espera junto al resto antes de retornar la orden.
+                    Task tPaymentInfo = Task.Run(() => EnriquecerPago(o, sbTraza));
 
                     Task tDeliveryAddress = Task.Run(() =>
                     {
@@ -418,147 +200,16 @@ namespace IntegracionPrestashopLib.Operations
                         }
                     });
 
-                    Task tComentario = Task.Run(() =>
-                    {
-                        sbTraza.Append($"Iniciando búsqueda de comentarios para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
-                        MessageResponse comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full", sbTraza);
-                        if (comentariosResponse != null && comentariosResponse.OrderPayments != null)
-                        {
-                            o.Mensajes = new Comentarios(
-                                            (from m in comentariosResponse.OrderPayments
-                                             select new Comentario
-                                             {
-                                                 Msg = m.Msg,
-                                                 FechaComentario = m.fechaHora
-                                             }).ToList());
-                        }
-                        else
-                            o.Mensajes = new Comentarios
-                            {
-                                Mensajes = new List<Comentario>()
-                            };
-                    });
+                    Task tComentario = Task.Run(() => EnriquecerComentarios(o, sbTraza));
 
-                    tProducts.Wait();
-                    Task tDiscounts = Task.Run(() => {
-                        if (o.TotalDicount > 0)
-                        {
+                    tProducts.Wait();   // los descuentos dependen de los productos ya resueltos
+                    Task tDiscounts = Task.Run(() => AplicarDescuentos(o, sbTraza));
 
-                            sbTraza.Append($"Iniciando búsqueda de datos de carrito {o.IdCart} {Environment.NewLine}");
-                            string urlPayment = WsUrl("cart_cart_rules.php");
+                    // Esperar a que TODAS las tareas de la orden terminen antes de retornarla
+                    // (incluida la del pago: Webpay/Banco de Chile).
+                    Task.WaitAll(tDiscounts, tComentario, tEstado, tCurrency, tInvoiceAdd, tDeliveryAddress, tCustomer, tPaymentInfo);
 
-                            Dictionary<String, String> parametros = new Dictionary<String, String>();
-                            parametros.Add("id_cart", o.IdCart);
-
-                            int idCart = 0;
-                            if (int.TryParse(o.IdCart, out idCart))
-                            {
-                                decimal signature = (17) + (idCart * 17);
-                                parametros.Add("signature", Functions.ToInvariant(signature));
-
-                                CartRulesResponse[] reglasAplicadas = PSOrdenClient.GetCartRules(urlPayment, parametros);
-                                foreach (CartRulesResponse regla in reglasAplicadas)
-                                {
-                                    if (regla.free_shipping == "1")
-                                    {
-                                        Console.WriteLine("Free Shipping");
-                                        o.NetShippingAmount = 0;
-                                        o.TotalShippingAmount = 0;
-                                    }
-                                    if (regla.TipoRegla == "categories")
-                                        {
-                                            List<Detalle> prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();
-                                            if (prods.Count > 0)
-                                            { 
-                                                if (regla.isPercent())
-                                                {
-                                                    DescontarPorcentajeADetalles(regla, prods);
-                                                }
-                                                else
-                                                {
-                                                    DescontarMontoADetallesEspecificos(regla, prods);
-                                                }
-                                            }
-                                        }
-                                    else if(regla.TipoRegla == "products")
-                                    {
-                                        List<Detalle> prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.ItemId == regla.id_item).ToList();
-                                        if (regla.isPercent())
-                                        {
-                                            DescontarPorcentajeADetalles(regla, prods);
-                                            
-                                        }
-                                        else
-                                        {
-                                            //logica contar cantidad de prod y descontar monto al pedido 
-                                            decimal cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
-                                            decimal proporcion = regla.getAmountToDiscount() / cuentaProds;
-                                            DescontarMontoADetalles(prods, proporcion);
-                                        }
-                                    }
-                                    else if (regla.TipoRegla == "total")
-                                    {
-                                        Decimal discountAmount = regla.getAmountToDiscount();
-                                        Decimal normalTotalSale = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLinePrice * i.SalesLineQty);
-                                        Decimal discountedTotalSale = normalTotalSale - discountAmount;
-
-                                        Decimal finalPriceProportion = discountedTotalSale / normalTotalSale;
-                                        List<Detalle> prods = o.DetalleDeVentas.itemsVendidos;
-                                        AplicarFactorADetalles(finalPriceProportion, prods);
-
-                                    }
-                                    else
-                                    {
-                                        if (regla.isPercent())
-                                        {
-                                            DescontarPorcentajeADetalles(regla, o.DetalleDeVentas.itemsVendidos);
-
-                                        }
-                                        else
-                                        {
-                                            //logica contar cantidad de prod y descontar monto al pedido 
-                                            decimal cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
-                                            decimal proporcion = regla.getAmountToDiscount() / cuentaProds;
-                                            DescontarMontoADetalles(o.DetalleDeVentas.itemsVendidos, proporcion);
-                                        }
-                                    }
-                                    
-                                    
-                                }
-                            }
-                        }
-                    });
-
-
-                    // Esperar a que TODAS las tareas de la orden terminen antes de continuar
-                    // (incluida la del pago: Webpay/Banco de Chile). Así la lista de órdenes
-                    // se retorna recién cuando cada orden está completamente enriquecida.
-                    List<Task> ordenTasks = new List<Task>
-                    {
-                        tDiscounts,
-                        tComentario,
-                        tEstado,
-                        tCurrency,
-                        tInvoiceAdd,
-                        tDeliveryAddress,
-                        tCustomer
-                    };
-                    if (tPaymentInfo != null)
-                    {
-                        ordenTasks.Add(tPaymentInfo);
-                    }
-                    Task.WaitAll(ordenTasks.ToArray());
-
-                    if (o.Facturacion.LiteralBusiness == "Factura")
-                    {
-                        o.Factura = true;
-                        Console.WriteLine("Compra con Factura");
-                    }
-                    else
-                    {
-                        o.Factura = false;
-                        Console.WriteLine("Compra con boleta");
-                    }
+                    DefinirFacturaOBoleta(o);
 
                     if (o.Despacho.EsRetiroEnTienda)
                     {
@@ -585,6 +236,342 @@ namespace IntegracionPrestashopLib.Operations
         }
 
 
+
+        // ---- Métodos de enriquecimiento de una orden (cada uno corre en su propia Task) ----
+
+        private void EnriquecerProductos(OrdenDeVenta o, Traza sbTraza)
+        {
+            List<Detalle> itemsTemp = o.DetalleDeVentas.itemsVendidos;
+            o.DetalleDeVentas.itemsVendidos = new List<Detalle>();
+
+            foreach (Detalle prod in itemsTemp)
+            {
+                sbTraza.Append($"Revisando si {prod.ItemId} es un producto compuesto, para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                ProductResponse productResp = psProducto.GetRecurso("products", prod.ItemId, apiKey, baseUrl, sbTraza);
+                if (productResp != null)
+                {
+                    if (productResp.Product.CacheIsPack != "1")
+                    {
+                        o.DetalleDeVentas.itemsVendidos.Add(prod);
+                        prod.Categories = productResp.Product.Associations.categories;
+                    }
+                    else
+                    {
+                        List<Detalle> openedItemsTemp = OpenPackDetail(prod, sbTraza);
+                        foreach (Detalle item in openedItemsTemp)
+                        {
+                            o.DetalleDeVentas.itemsVendidos.Add(item);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void EnriquecerEstado(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de estado para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+            EstadoResponse estadoResp = psEstado.GetRecurso("order_states", o.EstadoId, apiKey, baseUrl, sbTraza);
+            if (estadoResp != null)
+            {
+                Estado estado = estadoResp.estado;
+                o.Estado = estado.Nombres;
+            }
+        }
+
+        private void EnriquecerCliente(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de cliente para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+            CustomerResponse customerResp = psCustomer.GetRecurso("customers", o.CustomerId, apiKey, baseUrl, sbTraza);
+            if (customerResp != null)
+            {
+                Customer customer = customerResp.Clientes;
+                o.CustomerName = $"{customer.Nombre} {customer.Apellido}";
+                o.CustomerEmail = customer.Email;
+            }
+        }
+
+        private void EnriquecerMoneda(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de currency para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+            CurrencyResponse currencyRep = psCurrency.GetRecurso("currencies", o.CurrencyId, apiKey, baseUrl, sbTraza);
+            if (currencyRep != null)
+            {
+                Currency currency = currencyRep.Currency;
+                o.CurrencyCode = currency.CurrencyCode;
+                o.DetalleDeVentas.itemsVendidos.ForEach(d => d.SalesLineCurrencyCode = currency.CurrencyCode);
+            }
+        }
+
+        private void EnriquecerDireccionFactura(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Log($"Iniciando búsqueda de direccion de factura para orden {o.SalesIdPrestaShop} ");
+            AddressResponse invoiceAddressResp = psDelivery.GetRecurso("addresses", o.Facturacion.Direccion.AddressId, apiKey, baseUrl, sbTraza);
+            if (invoiceAddressResp == null)
+            {
+                return;
+            }
+
+            Address invoiceAddress = invoiceAddressResp.Address;
+            o.Facturacion.Direccion.AddressCity = invoiceAddress.Ciudad;
+            o.Facturacion.Direccion.AddressStreet = invoiceAddress.Direccion1;
+            o.Facturacion.PhoneNumber = invoiceAddress.Phone;
+            o.Facturacion.CustNameInvoice = invoiceAddress.Company == "" ? $"{invoiceAddress.Firstname} {invoiceAddress.Lastname}" : invoiceAddress.Company;
+            o.Facturacion.Rut = invoiceAddress.RutEmpresa.Trim();
+            o.Facturacion.LiteralBusiness = invoiceAddress.Other;
+
+            Task tState = Task.Run(() =>
+            {
+                sbTraza.Append($"Iniciando búsqueda de estado para dirección {o.Facturacion.Direccion.AddressId} de orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                StateResponse comunaResp = psState.GetRecurso("states", invoiceAddress.StateId, apiKey, baseUrl, sbTraza);
+                if (comunaResp != null)
+                {
+                    o.Facturacion.Direccion.AddressCounty = GetStringDecimalFromHexa(comunaResp.State.StateCode);
+                }
+            });
+
+            Task tCustomDel = Task.Run(() =>
+            {
+                sbTraza.Append($"Iniciando búsqueda de cliente en direcccion {o.Facturacion.Direccion.AddressId} para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+                CustomerResponse customerDeliveryResp = psCustomer.GetRecurso("customers", invoiceAddress.CustomerId, apiKey, baseUrl, sbTraza);
+                if (customerDeliveryResp != null)
+                {
+                    Customer customerDelivery = customerDeliveryResp.Clientes;
+                    o.Facturacion.EmailInvoice = customerDelivery.Email;
+                }
+            });
+            tState.Wait();
+            tCustomDel.Wait();
+        }
+
+        private void EnriquecerComentarios(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de comentarios para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+            MessageResponse comentariosResponse = psMessage.GetRecursoWithFilter("messages", $"{o.SalesIdPrestaShop}", apiKey, baseUrl, $"&filter[id_order]=[{o.SalesIdPrestaShop}]&display=full", sbTraza);
+            if (comentariosResponse != null && comentariosResponse.OrderPayments != null)
+            {
+                o.Mensajes = new Comentarios(
+                                (from m in comentariosResponse.OrderPayments
+                                 select new Comentario
+                                 {
+                                     Msg = m.Msg,
+                                     FechaComentario = m.fechaHora
+                                 }).ToList());
+            }
+            else
+            {
+                o.Mensajes = new Comentarios { Mensajes = new List<Comentario>() };
+            }
+        }
+
+        private void DefinirFacturaOBoleta(OrdenDeVenta o)
+        {
+            o.Factura = o.Facturacion.LiteralBusiness == "Factura";
+            Console.WriteLine(o.Factura ? "Compra con Factura" : "Compra con boleta");
+        }
+
+        // ---- Enriquecimiento del pago ----
+
+        private void EnriquecerPago(OrdenDeVenta o, Traza sbTraza)
+        {
+            if (o.PaymMode == WEBPAY)
+            {
+                EnriquecerPagoWebpay(o, sbTraza);
+            }
+            else if (o.PaymMode == BCHILE)
+            {
+                EnriquecerPagoBancoChile(o, sbTraza);
+            }
+            else
+            {
+                sbTraza.Log($"Pago con {o.PaymMode}");
+            }
+        }
+
+        private void EnriquecerPagoWebpay(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de datos transbank para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+
+            int idCart = 0;
+            if (!int.TryParse(o.IdCart, out idCart))
+            {
+                return;
+            }
+
+            Dictionary<string, string> parametros = new Dictionary<string, string>();
+            parametros.Add("order_id", o.SalesIdPrestaShop.ToString());
+            parametros.Add("cart_id", o.IdCart);
+            parametros.Add("signature", Functions.ToInvariant(CalcularFirmaPago(o.SalesIdPrestaShop, idCart)));
+
+            PaymentResponse payment = PSOrdenClient.GetOrderPayment(WsUrl("webpayinfo.php"), parametros);
+            if (payment == null)
+            {
+                o.TransactionInfo = new PaymentInfo { MedioPago = WEBPAY };
+                return;
+            }
+
+            WPPayment tbkInfo = payment.transbank_response;
+            o.TransactionInfo = new PaymentInfo
+            {
+                MedioPago = WEBPAY,
+                Token = payment.token,
+                AccountingDate = tbkInfo.accountingDate,
+                Amount = tbkInfo.amount,
+                AuthorizationCode = tbkInfo.authorizationCode,
+                Balance = tbkInfo.balance == null ? "" : tbkInfo.balance.ToString(),
+                BuyOrder = tbkInfo.buyOrder,
+                Card_number = tbkInfo.cardDetail.card_number,
+                InstallmentsAmount = tbkInfo.installmentsAmount == null ? "" : tbkInfo.installmentsAmount.ToString(),
+                InstallmentsNumber = tbkInfo.installmentsNumber == null ? "" : tbkInfo.installmentsNumber.ToString(),
+                PaymentTypeCode = tbkInfo.paymentTypeCode,
+                ResponseCode = tbkInfo.responseCode,
+                SessionId = tbkInfo.sessionId,
+                Status = tbkInfo.status,
+                TransactionDate = tbkInfo.transactionDate,
+                Vci = tbkInfo.vci
+            };
+        }
+
+        private void EnriquecerPagoBancoChile(OrdenDeVenta o, Traza sbTraza)
+        {
+            sbTraza.Append($"Iniciando búsqueda de datos Banco de Chile para orden {o.SalesIdPrestaShop} {Environment.NewLine}");
+
+            int idCart = 0;
+            if (!int.TryParse(o.IdCart, out idCart))
+            {
+                return;
+            }
+
+            Dictionary<string, string> parametros = new Dictionary<string, string>();
+            parametros.Add("order_id", o.SalesIdPrestaShop.ToString());
+            parametros.Add("cart_id", o.IdCart);
+            parametros.Add("signature", Functions.ToInvariant(CalcularFirmaPago(o.SalesIdPrestaShop, idCart)));
+
+            BanchilePayment payment = PSOrdenClient.GetBanchilePayment(WsUrl("banchileinfo.php"), parametros);
+            if (payment == null)
+            {
+                o.TransactionInfo = new PaymentInfo { MedioPago = BCHILE };
+                return;
+            }
+
+            int responseCode = 0;
+            int.TryParse(payment.Reason, out responseCode);
+
+            o.TransactionInfo = new PaymentInfo
+            {
+                MedioPago = BCHILE,
+                // Campos con nombre Transbank (concepto equivalente)
+                AuthorizationCode = payment.AuthCode,
+                Amount = (int)payment.Amount,
+                Card_number = payment.CardLastDigits,
+                InstallmentsNumber = payment.Installments,
+                TransactionDate = payment.Date,
+                Status = payment.ReasonDescription,
+                ResponseCode = responseCode,
+                // Campos propios de Banco de Chile
+                IdPayment = payment.IdPayment,
+                CartId = payment.IdOrder,
+                CurrencyId = payment.IdCurrency,
+                Franchise = payment.Franchise,
+                FranchiseName = payment.FranchiseName,
+                Bank = payment.Bank,
+                Receipt = payment.Receipt,
+                Conversion = payment.Conversion,
+                IpAddress = payment.IpAddress,
+                PayerEmail = payment.PayerEmail,
+                RequestId = payment.IdRequest,
+                Reference = payment.Reference
+            };
+        }
+
+        // ---- Motor de descuentos (cart rules) ----
+
+        private void AplicarDescuentos(OrdenDeVenta o, Traza sbTraza)
+        {
+            if (o.TotalDicount <= 0)
+            {
+                return;
+            }
+
+            sbTraza.Append($"Iniciando búsqueda de datos de carrito {o.IdCart} {Environment.NewLine}");
+
+            int idCart = 0;
+            if (!int.TryParse(o.IdCart, out idCart))
+            {
+                return;
+            }
+
+            Dictionary<String, String> parametros = new Dictionary<String, String>();
+            parametros.Add("id_cart", o.IdCart);
+            decimal signature = (17) + (idCart * 17);
+            parametros.Add("signature", Functions.ToInvariant(signature));
+
+            CartRulesResponse[] reglasAplicadas = PSOrdenClient.GetCartRules(WsUrl("cart_cart_rules.php"), parametros);
+            foreach (CartRulesResponse regla in reglasAplicadas)
+            {
+                AplicarRegla(regla, o);
+            }
+        }
+
+        private void AplicarRegla(CartRulesResponse regla, OrdenDeVenta o)
+        {
+            if (regla.free_shipping == "1")
+            {
+                Console.WriteLine("Free Shipping");
+                o.NetShippingAmount = 0;
+                o.TotalShippingAmount = 0;
+            }
+
+            if (regla.TipoRegla == "categories")
+            {
+                List<Detalle> prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.Categories.Any(c => c.Id == regla.id_item)).ToList();
+                if (prods.Count > 0)
+                {
+                    if (regla.isPercent())
+                    {
+                        DescontarPorcentajeADetalles(regla, prods);
+                    }
+                    else
+                    {
+                        DescontarMontoADetallesEspecificos(regla, prods);
+                    }
+                }
+            }
+            else if (regla.TipoRegla == "products")
+            {
+                List<Detalle> prods = o.DetalleDeVentas.itemsVendidos.Where(i => i.ItemId == regla.id_item).ToList();
+                if (regla.isPercent())
+                {
+                    DescontarPorcentajeADetalles(regla, prods);
+                }
+                else
+                {
+                    decimal cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
+                    decimal proporcion = regla.getAmountToDiscount() / cuentaProds;
+                    DescontarMontoADetalles(prods, proporcion);
+                }
+            }
+            else if (regla.TipoRegla == "total")
+            {
+                Decimal discountAmount = regla.getAmountToDiscount();
+                Decimal normalTotalSale = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLinePrice * i.SalesLineQty);
+                Decimal discountedTotalSale = normalTotalSale - discountAmount;
+                Decimal finalPriceProportion = discountedTotalSale / normalTotalSale;
+                AplicarFactorADetalles(finalPriceProportion, o.DetalleDeVentas.itemsVendidos);
+            }
+            else
+            {
+                if (regla.isPercent())
+                {
+                    DescontarPorcentajeADetalles(regla, o.DetalleDeVentas.itemsVendidos);
+                }
+                else
+                {
+                    decimal cuentaProds = o.DetalleDeVentas.itemsVendidos.Sum(i => i.SalesLineQty);
+                    decimal proporcion = regla.getAmountToDiscount() / cuentaProds;
+                    DescontarMontoADetalles(o.DetalleDeVentas.itemsVendidos, proporcion);
+                }
+            }
+        }
 
         private void AplicarFactorADetalles(decimal finalPriceProportion, List<Detalle> prods)
         {

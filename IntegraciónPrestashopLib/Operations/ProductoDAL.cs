@@ -38,12 +38,12 @@ namespace IntegracionPrestashopLib.Operations
             Schema.PS.Producto psProd = new Schema.PS.Producto();
             Parser.parsePSProdFromERP(producto, ref psProd);
 
-            var res = PSProductoClient.CreateProduct(psProd, apiKey, baseUrl);
+            CreateResponse res = PSProductoClient.CreateProduct(psProd, apiKey, baseUrl);
             if (res.Creado)
             {
                 if (producto.Inventario != null)
                 {
-                    var stockRes = UpdateStock(producto.Inventario.Stock.ToString(), ((ProductResponse)res.Objeto).Product.ProductId);
+                    UpdateResponse stockRes = UpdateStock(producto.Inventario.Stock.ToString(), ((ProductResponse)res.Objeto).Product.ProductId);
                     if (stockRes.Actualizado)
                     {
                         return new CreateResponse
@@ -80,7 +80,7 @@ namespace IntegracionPrestashopLib.Operations
         public object GetProducto(string itemId_InventDimId)
         {
             Traza sbTraza = new Traza();
-            var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
+            ProductQueryResponse prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
             if (prodResult == null || prodResult.products == null)
             {
                 return new UpdateResponse
@@ -90,8 +90,8 @@ namespace IntegracionPrestashopLib.Operations
                     Error = $"El producto con referencia {itemId_InventDimId} no fué encontrado. Objeto prestashop: {psProducto.getJson(itemId_InventDimId)}"
                 };
             }
-            var prod = (Schema.PS.Producto)prodResult.products[0];
-            var prodERP = new Producto();
+            Schema.PS.Producto prod = (Schema.PS.Producto)prodResult.products[0];
+            Producto prodERP = new Producto();
             Parser.parseERPProdFromPS(prod, ref prodERP);
             return prodERP;
         }
@@ -101,7 +101,7 @@ namespace IntegracionPrestashopLib.Operations
             try
             {
                 Traza sbTraza = new Traza();
-                var prodResult = psProducto.GetRecursoWithFilter("products", producto.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{producto.ItemId_InventDimId}]&display=full", sbTraza);
+                ProductQueryResponse prodResult = psProducto.GetRecursoWithFilter("products", producto.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{producto.ItemId_InventDimId}]&display=full", sbTraza);
                 if (prodResult == null || prodResult.products == null)
                 {
                     return new UpdateResponse
@@ -111,7 +111,7 @@ namespace IntegracionPrestashopLib.Operations
                         Error = $"El producto con referencia {producto.ItemId_InventDimId} no fué encontrado. Objeto prestashop: {psProducto.getJson(producto.ItemId_InventDimId)}"
                     };
                 }
-                var prod = (Schema.PS.Producto)prodResult.products[0];
+                Schema.PS.Producto prod = (Schema.PS.Producto)prodResult.products[0];
                 Parser.parsePSProdFromERP(producto, ref prod);
 
                 return PSProductoClient.UpdateProduct((Schema.PS.ProductToUpdate)prod, apiKey, baseUrl);
@@ -135,10 +135,10 @@ namespace IntegracionPrestashopLib.Operations
                 Dictionary<String, String> parametros = new Dictionary<String, String>();
 
                 Traza sbTraza = new Traza();
-                var prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
+                ProductQueryResponse prodResult = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                 if (prodResult == null || prodResult.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
+                    CombinationsResponse comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null)
                     {
 
@@ -193,10 +193,10 @@ namespace IntegracionPrestashopLib.Operations
             {
                 Traza sbTraza = new Traza();
 
-                var prod = psProducto.GetRecursoWithFilter("products", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
+                ProductQueryResponse prod = psProducto.GetRecursoWithFilter("products", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
                 if (prod == null || prod.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
+                    CombinationsResponse comb = psCombinacion.GetRecursoWithFilter("combinations", stockProd.ItemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{stockProd.ItemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null) {
                         return new UpdateResponse
                         {
@@ -223,7 +223,7 @@ namespace IntegracionPrestashopLib.Operations
         {
             Traza sbTraza = new Traza();
 
-            var stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", sbTraza);
+            StockAvailableRepsonse stock = pSStock.GetRecursoWithFilter("stock_availables", prodID.ToString(), apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]", sbTraza);
             stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
@@ -231,7 +231,7 @@ namespace IntegracionPrestashopLib.Operations
         {
             Traza sbTraza = new Traza();
 
-            var stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", sbTraza);
+            StockAvailableRepsonse stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", sbTraza);
             stock.Stock[0].Stock = stockProd;
             return PSProductoClient.UpdateStock(stock.Stock[0], apiKey, baseUrl);
         }
@@ -241,13 +241,13 @@ namespace IntegracionPrestashopLib.Operations
             try
             {
                 Traza sbTraza = new Traza();
-                var prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
+                ProductQueryResponse prod = psProducto.GetRecursoWithFilter("products", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
 
                 StockAvailableRepsonse stock = new StockAvailableRepsonse();
                 int stockSalida = 0;
                 if (prod == null || prod.products == null)
                 {
-                    var comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
+                    CombinationsResponse comb = psCombinacion.GetRecursoWithFilter("combinations", itemId_InventDimId, apiKey, baseUrl, $"&filter[reference]=[{itemId_InventDimId}]&display=full", sbTraza);
                     if (comb == null || comb.products == null)
                     {
                         return new InventarioResponse
@@ -259,7 +259,7 @@ namespace IntegracionPrestashopLib.Operations
                         };
                     }
                     String prodID = comb.products[0].ProductId;
-                    var combinationId = comb.products[0].CombinationId;
+                    int combinationId = comb.products[0].CombinationId;
                     stock = pSStock.GetRecursoWithFilter("stock_availables", $"{prodID.ToString()}-{combinationId}", apiKey, baseUrl, $"&display=full&filter[id_product]=[{prodID}]&filter[id_product_attribute]=[{combinationId}]", sbTraza);
                 }
                 else

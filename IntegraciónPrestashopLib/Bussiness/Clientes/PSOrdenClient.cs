@@ -57,6 +57,8 @@ namespace IntegracionPrestashopLib.Bussiness.Clientes
                 return new OrdenesResponse
                 {
                     Orders = new List<OrdenDeCompra>(),
+                    HuboError = true,
+                    MensajeError = e.Message
                 };
             }
         }

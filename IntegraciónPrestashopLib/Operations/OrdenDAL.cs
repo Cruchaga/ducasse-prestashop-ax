@@ -52,7 +52,7 @@ namespace IntegracionPrestashopLib.Operations
         public OrdenDAL(String apiKey, String prestashopUrlBase, int userId)
         {
             this.apiKey = apiKey;
-            this.baseUrl = prestashopUrlBase;
+            this.baseUrl = Functions.NormalizarUrlBase(prestashopUrlBase);
             this.userId = userId;
         }
         /**
@@ -81,6 +81,20 @@ namespace IntegracionPrestashopLib.Operations
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
                 OrdenesResponse response = PSOrdenClient.GetOrdenes(fechaInicio, fechaFin, apiKey, baseUrl, sbTraza);
+
+                // Un fallo de consulta NO puede reportarse como "no hubo órdenes": AX
+                // no distinguiría el silencio de una caída del webservice.
+                if (response.HuboError)
+                {
+                    sbTraza.Log($"No se pudo consultar las ordenes en PrestaShop: {response.MensajeError}");
+                    return new Schema.dto.OrdenesResponse
+                    {
+                        ErrorCode = IntegracionErrorCode.PRESTASHOP_DISCONNECTED,
+                        Error = $"No se pudo consultar las ordenes en PrestaShop: {response.MensajeError}",
+                        Traza = sbTraza.ToString()
+                    };
+                }
+
                 IList<OrdenDeCompra> ordenesList = response.Orders;
                 if (ordenesList.Count > 0) { 
                     Console.WriteLine($"Se encontraron {ordenesList.Count} ordenes, se inicia el completar la info{Environment.NewLine}");

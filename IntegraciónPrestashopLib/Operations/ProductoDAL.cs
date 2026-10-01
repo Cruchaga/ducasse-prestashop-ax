@@ -26,7 +26,7 @@ namespace IntegracionPrestashopLib.Operations
         public ProductoDAL(String apiKey, String prestashopUrlBase)
         {
             this.apiKey = apiKey;
-            this.baseUrl = prestashopUrlBase;
+            this.baseUrl = Functions.NormalizarUrlBase(prestashopUrlBase);
         }
         /**
          * <summary>

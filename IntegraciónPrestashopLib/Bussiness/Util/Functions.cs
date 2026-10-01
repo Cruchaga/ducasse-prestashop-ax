@@ -37,6 +37,32 @@ namespace IntegracionPrestashopLib.Bussiness.Util
         }
 
         /// <summary>
+        /// Fuerza HTTPS en la URL base del webservice.
+        /// </summary>
+        /// <remarks>
+        /// Los sitios están tras Cloudflare con "Always Use HTTPS": una base en http://
+        /// recibe un 301 hacia https, y al seguir ese redirect WebClient/HttpWebRequest
+        /// NO reenvían el header Authorization. El resultado es un 401 que el llamador
+        /// interpretaba como "no hay órdenes" (falla silenciosa). Normalizar acá evita
+        /// que una URL mal configurada del lado de AX rompa la integración.
+        /// </remarks>
+        internal static string NormalizarUrlBase(string urlBase)
+        {
+            if (string.IsNullOrEmpty(urlBase))
+            {
+                return urlBase;
+            }
+
+            string url = urlBase.Trim();
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            {
+                url = "https://" + url.Substring("http://".Length);
+            }
+
+            return url;
+        }
+
+        /// <summary>
         /// Arma una URL agregando los parámetros como query string. Centraliza el patrón
         /// duplicado de construir "base?clave=valor&amp;clave=valor".
         /// </summary>

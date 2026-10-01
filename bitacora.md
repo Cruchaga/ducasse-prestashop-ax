@@ -1,11 +1,239 @@
 # Bitácora
 
-Registro de lo realizado en esta sesión sobre la integración AX ↔ PrestaShop,
-enfocada en habilitar el medio de pago **Banco de Chile (Banchile Pagos)** y en
-mejorar la calidad del código de la DLL.
+Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 
 > Contexto de infraestructura (Apache del ambiente de pruebas, endpoints PHP en el
 > servidor) está documentado aparte en `D:\code\DucasseInfra\BCH pagos\`.
+
+---
+
+
+# Sesión 2026-08-20 — Consulta de Iván Jerez tras instalar la v1.46: "el código de autorización de Webpay es muy chico"
+
+**Veredicto: falsa alarma. El dato es correcto y la DLL no lo transforma.**
+
+AX mostraba `Webpay-022873` (el prefijo `Webpay-` lo concatena el X++). Verificado contra la
+BD de producción: la transacción de la orden **15913** tiene `authorizationCode = 022873`
+**exacto**. El mapeo es correcto de punta a punta.
+
+**Por qué "parece" chico:** el código trae **cero a la izquierda** (`022873`), y leído como
+número da 22.873 — cinco cifras. Pero es un **código de 6 caracteres**, no un número. El
+**38% de los códigos históricos empieza con cero** (5.439 de 14.256). Ejemplos del mismo día:
+`617165`, `073572`, `583173`, `895549`, `007794`, `493417` — todos de 6.
+
+**El formato de 6 dígitos es constante desde hace 5 años:**
+
+| Largo | Transacciones | Rango |
+|---|---|---|
+| 6 | **14.219** | 2021-02-05 → 2026-08-20 |
+| 4 | 37 | 2021-01-06 → 2021-02-05 (primeras semanas del módulo) |
+
+**Descartado como regresión de la v1.46 por comparación de código:**
+`AuthorizationCode = tbkInfo.authorizationCode` es **idéntico** en la versión previa
+(`git show 3254594~1`) y en la actual; el tipo sigue siendo `string` en `TransbankInfo` →
+`PaymentInfo`; y `Schema/PS/WPPayment.cs` **no cambió** en el refactor (diff vacío). La DLL
+pasa el valor tal cual llega de `WS/webpayinfo.php`.
+
+⚠️ **Punto de atención para el X++:** si el valor se asigna en algún tramo a un campo
+**numérico**, `022873` se convertiría en `22873` y perdería el cero — ahí sí habría pérdida de
+dato. En la captura llega bien; conviene que se mantenga como **string** en todo el flujo
+(incluidos reportes y conciliación).
+
+*Probable origen de la impresión:* el `buy_order` de la misma transacción es `Order:562216`,
+bastante más largo. Si antes ese campo de AX mostraba el buy_order o el token, el cambio a un
+código de 6 dígitos se percibe como "más chico".
+
+---
+
+# Sesión 2026-08-15 — Release v1.46: paquete de entrega para AX (soporte Banco de Chile)
+
+**Gatillo:** Banchile Pagos **certificó** la integración el 2026-08-14 y entregó las llaves
+productivas. Antes de habilitar el botón en producción hay que actualizar la DLL en AX
+(coordinación con **Iván Jerez**).
+
+## Versión
+
+`AssemblyVersion`/`AssemblyFileVersion` **1.41.0.0 → 1.46.0.0**. El AssemblyInfo estaba
+desfasado: el último paquete distribuido fue `IntegracionDLLv1.45.rar` (2023) pero el
+assembly nunca se bumpeó. Se salta a 1.46 para que la entrega sea inequívocamente posterior
+a ambas y para que un binding con *strong name* no resuelva a la vieja.
+
+## Compilación
+
+.NET Framework 3.5, Release, **limpia** (solo los 2 warnings preexistentes: `Parser.cs`
+CS0168 y `StateResponse.cs` CS0649).
+
+⚠️ **Gotcha de build:** el proyecto usa **interpolación de strings** (`$"..."`, C# 6+), así
+que el MSBuild de `C:\Windows\Microsoft.NET\Framework64\v4.0.30319` **NO sirve** (compilador
+pre-Roslyn → `error CS1056: Unexpected character '$'`). Hay que usar el MSBuild del .NET SDK
+(`dotnet msbuild`). Como no hay Developer Pack de .NET 3.5 instalado, se resolvió sin tocar
+el sistema, con los reference assemblies del paquete NuGet:
+
+```bash
+# 1) bajar y extraer Microsoft.NETFramework.ReferenceAssemblies.net35 (1.0.3)
+# 2) compilar apuntando TargetFrameworkRootPath a build/ del paquete
+dotnet msbuild "IntegraciónPrestashopLib/IntegracionPrestashopLib.csproj" \
+  /t:Rebuild /p:Configuration=Release \
+  /p:TargetFrameworkRootPath=<pkg>/build/
+```
+
+## Entregable
+
+`D:\code\DucasseInfra\BCH pagos\IntegracionPrestashopLib-v1.46-BancoDeChile.zip` (464 KB):
+DLL + `.dll.config` (binding redirect de Newtonsoft) + `.pdb` + las 3 dependencias
+(Newtonsoft.Json 12.0.3, Newtonsoft.Json.Schema 1.0.11, System.Threading.Tasks.NET35) +
+**README.md** con el instructivo (qué cambió, contrato, instalación, verificación, rollback).
+Fuente sin comprimir en `BCH pagos/entrega-dll-v1.46/`.
+
+## Qué incluye respecto de lo que hoy corre en AX
+
+Los commits `3254594` + `431b4a8` + `90d8da0` (soporte BCH y refactor) **y** el hardening de
+la sesión 2026-08-12 (`NormalizarUrlBase` + error no silencioso), que seguía **sin desplegar**.
+
+## Punto de atención para el X++ (comunicado a Iván Jerez)
+
+`TransbankInfo` → **`PaymentInfo`**. `OrdenDeVenta.TransactionInfo` conserva nombre y todos
+sus campos previos; solo rompe si el X++ **declara el tipo explícitamente**.
+
+## Hallazgo bloqueante para producción (lado servidor)
+
+**`WS/banchileinfo.php` responde 404 en `dapducasse.cl`** (verificado; en `bch.` responde 200).
+Es un archivo custom fuera del módulo, así que el despliegue del plugin **no lo instala solo**.
+Sin él, las órdenes Banchile llegarán a AX con `MedioPago` seteado pero el resto del pago vacío.
+Sumar a `paso_a_prod.md`.
+
+## Regresión de la v1.46 contra Stock Insumos (producción, solo lectura)
+
+Se validó la **retrocompatibilidad** en un sitio **sin** Banco de Chile. Harness aislado
+(`GetOrdenes` únicamente); **no** se usó el `Test/Program.cs` del repo porque su `Main`
+contiene llamadas a `ProductoDAL.UpdateStock` — escritura contra producción.
+
+| # | Caso | Resultado |
+|---|---|---|
+| A | HTTPS, ventana 05–08 ago | 3 órdenes completas (451 `ENYTDBMMI`, 452 `QBEIBMELG`, 453 `JJLSZUYIG`), `MedioPago="Webpay Plus"`, authcode y montos OK |
+| B | **HTTP**, misma ventana | **Idéntico a A** → `NormalizarUrlBase` cumple (antes: 0 órdenes en silencio) |
+| A vs B | Comparación campo a campo | Mismos id/total/nº líneas |
+| C | Ventana sin compras | 0 órdenes, `ErrorCode=0` (sin falso positivo) |
+| D | API key inválida | `ErrorCode=1` + `(401) Unauthorized` (ya no silencioso) |
+
+**0 llamadas** a `banchileinfo.php` (solo se invoca con `PaymMode=="Banchile Pagos"`) → que
+ese endpoint no exista en stockinsumos es irrelevante. **0 excepciones**. `TransactionInfo`
+nunca nulo.
+
+**El cambio de filtro `[3]` → `[2|3]` no altera nada en Stock Insumos:** el estado 2
+("Payment accepted") existe pero tiene **0 órdenes en todo el histórico** (medido en la BD
+`ps_stock`: estado 3 = 95, 5 = 320, 6 = 23, 4 = 13, 24 = 3, 8 = 1). Único medio de pago:
+`Webpay Plus` (84 órdenes/12 meses). **Verificar lo mismo en dapducasse.cl** antes de asumir
+igual comportamiento — ahí sí habrá órdenes en estado 2 por el flujo de Banchile.
+
+Harness y log en el scratchpad de la sesión (`scratchpad/regresion/`).
+
+## Pendientes menores detectados (no tocados)
+
+- `IntegraciónPrestashopLib/Operations/OrdenDAL.cs.rej` — hunk rechazado de un refactor
+  cosmético (tipar `var prods` + `regla.id_item.ToString()`). El código compila; es basura
+  de un patch fallido, se puede borrar.
+- `WsUrl()` hace `baseUrl.Replace("api/", ...)`: **exige que la URL base termine en `/api/`**.
+  Si no, la consulta del pago apunta a una URL inválida. Documentado en el README como
+  requisito de configuración; endurecerlo queda como mejora futura.
+- `ResponseCode` sale de `int.TryParse(payment.Reason)`: un `reason` no numérico (en julio el
+  sandbox devolvía `"?2"`) cae a **0**, que en convención Transbank significa aprobado. Hoy es
+  inocuo porque `banchileinfo.php` filtra `status = 1` (solo pagos aprobados), pero conviene
+  mapearlo explícito si algún día el endpoint devuelve rechazos.
+
+**Sin commit** — los cambios (incluido el bump de versión) quedan en el working tree de `master`.
+
+---
+
+# Sesión 2026-08-12 — Stock Insumos: la DLL dejó de bajar órdenes (falla silenciosa)
+
+> Instancia afectada: **stockinsumos.cl** (misma base de código que dapducasse.cl).
+> Seguimiento del incidente: `D:\code\StockInsumos\tasks\pendientes.md` → **SI-009**.
+
+## Síntoma
+
+AX dejó de recibir órdenes **sin reportar ningún error**. Las compras del 6 y 7 de
+agosto existían y estaban correctas en PrestaShop: órdenes **452** (`QBEIBMELG`,
+$11.210) y **453** (`JJLSZUYIG`, $53.627), ambas en estado 3 y pagadas con Webpay.
+
+## Causa raíz: URL base con `http://`
+
+La URL del webservice configurada en AX usaba `http://`. La cadena de fallo:
+
+1. **Cloudflare** responde `301` hacia HTTPS (force-SSL).
+2. Al seguir el redirect, `WebClient`/`HttpWebRequest` de .NET **no reenvían el
+   header `Authorization`** → PrestaShop responde **401**.
+3. El `catch` de `PSOrdenClient.GetOrdenes` se tragaba la excepción y devolvía una
+   lista vacía.
+4. AX recibía **0 órdenes con `ErrorCode = 0`** — indistinguible de "no hubo ventas".
+
+**Disparador identificado:** el **2026-08-06**, en la auditoría de seguridad de
+stockinsumos.cl posterior al incidente de dapducasse, se cambió en Cloudflare
+`always_use_https` **off → on**. Hasta entonces la URL `http://` configurada en AX
+funcionaba tal cual. Encaja exacto con los síntomas: la orden 451 (05-08) llegó a AX,
+la 452 (06-08) ya no.
+
+⚠️ **Aplica igual a dapducasse.cl y a cualquier otra instancia**: si la URL base
+configurada en AX apunta por `http://`, el día que se fuerce HTTPS en Cloudflare la
+integración se cae en silencio. Conviene verificar el esquema en todas las instancias.
+
+**Descartado por medición** (no re-investigar): el filtro `filter[current_state]=[2|3]`
+es correcto; TLS está bien (el sitio exige 1.2+ y la DLL lo fuerza explícitamente);
+no hay bloqueo de WAF por User-Agent; y existen productos, clientes, direcciones,
+`states` y el endpoint `WS/webpayinfo.php` de las tres órdenes.
+
+## Solución
+
+En AX se cambió la URL a `https://stockinsumos.cl/api/` → **resuelto y confirmado**.
+
+## Hardening aplicado en la DLL
+
+1. **Normalización de la URL base** — nuevo `Functions.NormalizarUrlBase()`, aplicado
+   en los constructores de `OrdenDAL` y **`ProductoDAL`** (la subida de productos y
+   stock arrastraba el mismo defecto latente). Una base en `http://` ya no rompe la
+   integración.
+2. **El error deja de ser silencioso** — `PS.Responses.OrdenesResponse` gana
+   `HuboError`/`MensajeError` (ambos `[XmlIgnore]`/`[JsonIgnore]`), y `OrdenDAL.GetOrdenes`
+   corta devolviendo `ErrorCode = PRESTASHOP_DISCONNECTED` con el mensaje en vez de una
+   lista vacía. Esto **no** contradice la decisión de no envolver cada orden en
+   try/catch (A3 de la sesión anterior): acá no se agrega un catch, se propaga uno que
+   ya existía y ocultaba la falla.
+
+**Archivos tocados** (5, +58 líneas): `Bussiness/Util/Functions.cs`,
+`Bussiness/Clientes/PSOrdenClient.cs`, `Operations/OrdenDAL.cs`,
+`Operations/ProductoDAL.cs`, `Schema/PS/Responses/OrdenesResponse.cs`.
+**Sin commit ni push** — quedan en el working tree de `master`.
+
+## Verificación
+
+Compilación limpia (solo los 2 warnings preexistentes: `Parser.cs` CS0168 y
+`StateResponse.cs` CS0649). DLL ejecutada contra el sitio productivo:
+
+| Escenario | Antes | Ahora |
+|---|---|---|
+| `http://` + ventana 6–8 ago | 0 órdenes, `ErrorCode=0` | 2 órdenes completas |
+| `https://` + ventana 6–8 ago | 2 órdenes | 2 órdenes |
+| API key inválida | 0 órdenes, `ErrorCode=0` | `ErrorCode=1` + mensaje |
+| Ventana sin compras | 0 órdenes, `ErrorCode=0` | 0 órdenes, `ErrorCode=0` |
+
+Las dos últimas filas son el punto: "no se pudo consultar" y "no hubo ventas" ya son
+distinguibles para AX.
+
+**Falta recompilar y desplegar la DLL en AX** para que este hardening quede activo;
+hoy la integración funciona por la URL corregida, no por el fix.
+
+## Nota
+
+`WS/banchileinfo.php` **no existe en stockinsumos.cl** (404). Solo importa si se
+habilita ahí el botón de pago Banco de Chile — habría que desplegar el endpoint,
+igual que se hizo en el ambiente BCH de DAP.
+
+---
+
+# Sesión anterior — Banco de Chile (Banchile Pagos) + refactor de calidad
+
+Enfocada en habilitar el medio de pago **Banco de Chile** y en mejorar la calidad del
+código de la DLL.
 
 ---
 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2D9E6A11-7C43-4B8E-9F05-C3A1E7B6D942}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Prestashop.Net.Tests</RootNamespace>
+    <AssemblyName>Prestashop.Net.Tests</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <LangVersion>3</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="PruebasJsonFirma.cs" />
+    <Compile Include="PruebasLogConfig.cs" />
+    <Compile Include="PruebasLotesLog.cs" />
+    <Compile Include="PruebasOrdenesLotes.cs" />
+    <Compile Include="PruebasTransporte.cs" />
+    <Compile Include="ServidorFalso.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Fixtures\ordenes.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Prestashop.Net\Prestashop.Net.csproj">
+      <Project>{6C1F3B52-5D0E-4C1A-9A8F-2F6F0C0D91A7}</Project>
+      <Name>Prestashop.Net</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

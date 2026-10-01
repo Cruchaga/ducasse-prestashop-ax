@@ -66,3 +66,9 @@ IntegraciónPrestashopLib/obj/
 IntegraciónPrestashopLib/bin/
 .vs/
 Test/bin/
+
+# prestashop-net.dll (PS 9.1): salidas de compilacion y pruebas
+/Prestashop.Net*/bin/
+/Prestashop.Net*/obj/
+TestResult.xml
+*.DotSettings.user

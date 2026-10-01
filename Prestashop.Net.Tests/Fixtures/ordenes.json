@@ -1,0 +1,53 @@
+{
+  "ordenes": [
+    {
+      "idOrden": 21, "referencia": "WDXJJQGAZ", "fechaCreacion": "2026-09-08T00:24:18-03:00", "idEstado": 2, "estado": "Pago aceptado",
+      "moneda": "CLP", "idCarrito": 84, "revisarDireccion": true, "errorCode": 0, "errorMessage": "",
+      "cliente": { "idCliente": 36, "nombreCompleto": "María José Pérez Soto", "email": "maria@example.cl", "rut": "123456785", "telefono": "+56961234567" },
+      "documento": { "tipo": "factura", "empresaRut": "760468096", "razonSocial": "Constructora Peña Ltda.", "giro": "Construcción",
+                     "nombreFantasia": "Peña", "direccionEmpresa": "Av. O'Higgins 1460", "comunaEmpresa": "Santiago", "regionEmpresa": "Metropolitana de Santiago" },
+      "direccionEntrega": { "idDireccion": 28, "nombreContacto": "María José Pérez Soto", "calle": "Av. Providencia 1208", "complemento": "Depto 5",
+                            "comuna": "Providencia", "idComuna": 470, "region": "Metropolitana de Santiago", "telefono": "+56961234567" },
+      "direccionFacturacion": { "idDireccion": 29, "nombreContacto": "María José Pérez Soto", "calle": "Av. O'Higgins 1460", "complemento": "",
+                                "comuna": "Santiago", "idComuna": 480, "region": "Metropolitana de Santiago", "telefono": "+56961234567" },
+      "pago": { "medioPago": "Webpay Plus", "modulo": "webpay", "tieneDetalle": true, "token": "01ab", "vci": "TSY", "amount": 187297, "status": "AUTHORIZED",
+                "buyOrder": "ps:1:84", "sessionId": "s1", "cardNumber": "6623", "accountingDate": "0908", "transactionDate": "2026-09-08T03:24:00.000Z",
+                "authorizationCode": "001213", "paymentTypeCode": "VN", "responseCode": 0, "installmentsAmount": 0, "installmentsNumber": 0, "balance": 0,
+                "idPayment": 0, "cartId": 84, "currencyId": 1, "franchise": "", "franchiseName": "", "bank": "", "receipt": "", "conversion": 0,
+                "ipAddress": "", "payerEmail": "", "requestId": 0, "reference": "" },
+      "totales": { "productosNeto": 152592, "productosBruto": 181585, "envioNeto": 8853, "envioBruto": 10535, "descuentoNeto": 3000, "descuentoBruto": 3570,
+                   "impuesto": 29905, "totalPagadoNeto": 157392, "totalPagado": 187297, "pesoKg": 43.992 },
+      "envios": [
+        { "idEnvio": 7, "idShipment": 7, "secuencia": 1, "tipo": "retiro", "servicio": "retiro", "centroDistribucion": "LAMPA", "idCarrier": 13,
+          "carrier": "Retiro en tienda - CD Lampa", "tienda": { "idTienda": 5, "codigoAx": "T05", "nombre": "Santiago Centro", "direccion": "Av. L. B. O'Higgins 1472, Santiago" },
+          "pesoKg": 0.992, "costoNeto": 0, "costoBruto": 0, "estado": "en_tienda", "tracking": "", "fechaEstado": "2026-09-09T10:00:00-03:00",
+          "lineas": [ { "idDetalle": 27, "sku": "KIT-01", "cantidad": 1 } ] },
+        { "idEnvio": 8, "idShipment": 8, "secuencia": 2, "tipo": "despacho", "servicio": "flete", "centroDistribucion": "PUDAHUEL", "idCarrier": 12,
+          "carrier": "Despacho Flete - CD Pudahuel", "tienda": { "idTienda": 0, "codigoAx": "", "nombre": "", "direccion": "" },
+          "pesoKg": 36, "costoNeto": 8853, "costoBruto": 10535, "estado": "despachado", "tracking": "CHX123", "fechaEstado": "",
+          "lineas": [ { "idDetalle": 28, "sku": "14P1010001-00303099_048", "cantidad": 2 } ] }
+      ],
+      "lineas": [
+        { "idDetalle": 27, "sku": "A-1", "idProducto": 1, "idCombinacion": 0, "nombre": "Manilla", "cantidad": 1, "precioListaNeto": 40000, "precioNeto": 39656.25,
+          "precioBruto": 47190.94, "tasaImpuesto": 19, "totalNeto": 39656.25, "totalBruto": 47190.94, "descuentoNeto": 780.5, "descuentoBruto": 928.8,
+          "totalNetoFinal": 38875.75, "totalBrutoFinal": 46262.14, "idEnvio": 7, "idShipment": 7, "esComponentePack": true, "skuPackPadre": "KIT-01" },
+        { "idDetalle": 27, "sku": "B-2", "idProducto": 2, "idCombinacion": 9, "nombre": "Tornillo", "cantidad": 3, "precioListaNeto": 8000, "precioNeto": 7931.25,
+          "precioBruto": 9438.19, "tasaImpuesto": 19, "totalNeto": 23793.75, "totalBruto": 28314.56, "descuentoNeto": 468.3, "descuentoBruto": 557.28,
+          "totalNetoFinal": 23325.45, "totalBrutoFinal": 27757.28, "idEnvio": 7, "idShipment": 7, "esComponentePack": true, "skuPackPadre": "KIT-01" },
+        { "idDetalle": 28, "sku": "14P1010001-00303099_048", "idProducto": 93, "idCombinacion": 0, "nombre": "Porcelanato", "cantidad": 2,
+          "precioListaNeto": 44525.210084, "precioNeto": 44525.210084, "precioBruto": 52985, "tasaImpuesto": 19, "totalNeto": 89050, "totalBruto": 105970,
+          "descuentoNeto": 1751.2, "descuentoBruto": 2083.92, "totalNetoFinal": 87298.8, "totalBrutoFinal": 103886.08, "idEnvio": 8, "idShipment": 8,
+          "esComponentePack": false, "skuPackPadre": "" }
+      ],
+      "descuentos": [ { "codigo": "BIENVENIDA", "nombre": "Cupón bienvenida", "montoNeto": 3000, "montoBruto": 3570, "envioGratis": false } ],
+      "mensajes": [ { "fecha": "2026-09-08T00:25:00-03:00", "texto": "Llamar antes de despachar" } ],
+      "integracion": { "estado": "entregada", "entregas": 2, "idVentaAx": "" },
+      "campoFuturoDelContrato": { "algo": [1, 2, 3] }
+    },
+    {
+      "idOrden": 22, "referencia": "QHNBLAIXI", "fechaCreacion": "2026-09-15T11:56:57-03:00", "idEstado": 2, "estado": "Pago aceptado", "moneda": "CLP",
+      "idCarrito": 90, "errorCode": 400, "errorMessage": "La orden 22 no tiene dirección de entrega (id_address 31 no existe)."
+    }
+  ],
+  "pendientesRestantes": 3
+}

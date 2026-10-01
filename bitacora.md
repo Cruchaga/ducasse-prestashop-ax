@@ -8,6 +8,25 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 ---
 
 
+# Sesión 2026-10-01 — `prestashop-net.dll` 2.0.0: DLL nueva para PrestaShop 9.1 (DD-073 / dap-004)
+
+Diseño aprobado por Iván (30 decisiones) en `D:\code\DapDucasse\ps9.1\dll_ax_dap004\DISEÑO.md`. Trabajo en la rama **`ps91`**, sin push.
+
+- **`master`:** commit `ddd94bc` con el hardening del 12-ago que estaba sin commitear (HTTPS forzado, propagación del error
+  en `GetOrdenes`, versión 1.46, bitácora). Se descartó el ruido (`Test.csproj` StartupObject, caché de `obj/`, `OrdenDAL.cs.rej`).
+- **`ps91`:** commit `aaf948f` con `Prestashop.Net`, `Prestashop.Net.Tests` y `Prestashop.Net.Console`; se eliminó `Test`.
+- **Decisión de implementación:** sin Newtonsoft.Json (vulnerabilidad GHSA-5crp-9r3c-p9vr en la 12.0.3 y conflicto de versiones
+  en la carpeta de AX). JSON propio de ~250 líneas con límite de anidamiento, cubierto por tests.
+- **Pruebas:** 48/48 NUnit; E2E contra `v3.dapducasse.cl` con más de 80 llamadas (las 10 operaciones y sus errores). 50 órdenes
+  con 80 envíos y 134 líneas en 27–30 ms de servidor y 0,9 s totales, sin paralelizar. Evidencia en
+  `D:\code\DapDucasse\ps9.1\dll_ax_dap004\pruebas\`.
+- **Entrega:** `D:\code\DapDucasse\ps9.1\dll_ax_dap004\entrega-prestashop-net-v2.0\` (+ zip): DLL, consola, instructivo y `ejemplo.xpp`.
+- **Ojo:** al compilar la solución completa se regeneraron los binarios de la 1.46 en `bin/Release`; se restauraron desde el
+  paquete `ps1.7/entrega-dll-ax/` (mismo SHA-256 que el del 15-ago). Compilar solo los proyectos nuevos (ver CLAUDE.md).
+- **No probado:** carga dentro de AX y ejecución sobre CLR 2 (este PC solo tiene .NET 4.8). Lo verifica Iván Jerez.
+- **Pendiente en este repo:** las claves que estaban en `Test/Program.cs` siguen en el historial de git; conviene rotarlas.
+
+
 # Sesión 2026-08-20 — Consulta de Iván Jerez tras instalar la v1.46: "el código de autorización de Webpay es muy chico"
 
 **Veredicto: falsa alarma. El dato es correcto y la DLL no lo transforma.**

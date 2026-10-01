@@ -88,6 +88,51 @@ Las órdenes que se procesan están en estados **2 (Pago aceptado)** y
    `Task.Run` en paralelo y luego `Task.WaitAll`. Cualquier estado compartido debe
    ser thread-safe.
 
+## prestashop-net.dll — DLL nueva para PrestaShop 9.1 (rama `ps91`)
+
+Desde el 2026-10-01 el repo tiene **dos DLL independientes**:
+
+| | `IntegraciónPrestashopLib` (1.46) | `Prestashop.Net` (2.0) |
+|---|---|---|
+| Tienda | PS 1.7 (dapducasse.cl hasta el cutover, stockinsumos.cl) | PS 9.1 (módulo `dapintegracion`) |
+| Ensamblado | `IntegracionPrestashopLib.dll` | **`prestashop-net.dll`** (namespace `Prestashop.Net`) |
+| Dependencias | Newtonsoft.Json 12.0.3, TPL backport | **ninguna** (JSON propio en `Interno/Json.cs`) |
+| Estado | congelada: solo correcciones | activa |
+
+Proyectos nuevos: `Prestashop.Net` (la DLL), `Prestashop.Net.Tests` (NUnit 2.6.4, 48 tests, servidor HTTP falso en
+`ServidorFalso.cs`) y `Prestashop.Net.Console` (escenarios; reemplaza al antiguo `Test`, que se eliminó por tener claves de
+producción en el código). Diseño, pruebas y paquete de entrega: `D:\code\DapDucasse\ps9.1\dll_ax_dap004\`.
+
+Reglas propias de `Prestashop.Net`:
+- **Contrato con AX:** todo lo público (`Cliente`, `Configuracion`, `Respuesta*`, `Lote*`, `*V2`, `Errores`, `Estados`). Solo se
+  **agrega**; nunca se renombra ni se quita. Lo demás va en `Interno/` como `internal`.
+- **X++ no ve campos ni genéricos:** exponer **propiedades** y listas como `XxxCount` + `GetXxx(i)`; lotes con `Agregar(...)`.
+- **Ningún método público lanza:** todo pasa por `Cliente.Ejecutar`, que convierte cualquier excepción en `ErrorCode 900`.
+- **Catálogo de errores** (`Errores.cs`) idéntico al de `src/Errores.php` del módulo: un código nuevo se agrega en los dos lados.
+- **Firma** (`Interno/Firma.cs`) idéntica a `src/Service/Firma.php`: hay un vector compartido en `PruebasFirma` y en
+  `tests/unit_test.php` del módulo. Si cambia un lado, cambian los dos y el vector.
+- **HTTPS obligatorio, sin seguir redirecciones, síncrona y de un hilo** (sin TPL). `LangVersion 3`: compila también en VS antiguo.
+- **Sin secretos en el repo:** la consola lee `PSNET_URL`, `PSNET_KEYID`, `PSNET_SECRETO` (+ `PSNET_BASIC_*` en staging) del
+  entorno o de `--env=archivo`. Los archivos `.env` viven fuera del repo.
+
+Compilar y probar **solo los proyectos nuevos** (compilar la solución completa regenera los binarios de la 1.46 en su
+`bin/Release`, que son los entregados a AX el 15-ago-2026):
+
+```bash
+REF="C:/Users/<usuario>/.nuget/packages/microsoft.netframework.referenceassemblies.net35/1.0.3/build/"
+dotnet msbuild Prestashop.Net.Tests/Prestashop.Net.Tests.csproj -p:Configuration=Release "-p:TargetFrameworkRootPath=$REF"
+dotnet msbuild Prestashop.Net.Console/Prestashop.Net.Console.csproj -p:Configuration=Release "-p:TargetFrameworkRootPath=$REF"
+packages/NUnit.Runners.2.6.4/tools/nunit-console.exe Prestashop.Net.Tests/bin/Release/Prestashop.Net.Tests.dll -process:Single
+Prestashop.Net.Console/bin/Release/Prestashop.Net.Console.exe ping --env=<archivo.env>
+```
+
+- `packages/` está en `.gitignore`: NUnit se restaura desde `Prestashop.Net.Tests/packages.config` (o copiando
+  `nunit.framework.dll` y `NUnit.Runners/tools` desde la caché de NuGet).
+- En una máquina sin .NET 3.5, `nunit-console.exe` no arranca: agregar `<supportedRuntime version="v4.0.30319" />` dentro de
+  `<startup>` en su `.config`. La consola ya trae ese ajuste en su `app.config`.
+- En el shell de Claude Code de este equipo los comandos se truncan cerca de 8 KB y la barra invertida doble se vuelve simple:
+  escribir archivos por trozos y usar `(char)92` o cadenas verbatim en vez de barras dobles.
+
 ## Build
 
 Abrir `DapDucasse.sln` en Visual Studio y compilar (Framework 3.5). El proyecto `Test`

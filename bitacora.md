@@ -8,6 +8,15 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 ---
 
 
+# Sesión 2026-10-07 — TLS 1.2 forzado en `prestashop-net.dll` (pedido de Iván)
+
+- Commit `4e10f20` (`ps91`): `Transporte.Intentar` asigna `ServicePointManager.SecurityProtocol = (SecurityProtocolType)0x00000C00`
+  antes de cada request, igual que `HttpRequestFunctions` de la 1.46; antes se agregaba con OR. Si el framework no soporta
+  TLS 1.2 devuelve `ErrorCode 102` con el mensaje de qué instalar (KB3154518 o .NET 4.5+); la 1.46 lanzaba `NotSupportedException`.
+- Observación: en `IntegracionEnviame` el bloque equivalente está **comentado** (`EnviameClient.cs`): Envíame no fuerza TLS 1.2.
+- 48/48 tests; ping real contra v3 OK. Paquete de entrega recompilado.
+
+
 # Sesión 2026-10-01 — `prestashop-net.dll` 2.0.0: DLL nueva para PrestaShop 9.1 (DD-073 / dap-004)
 
 Diseño aprobado por Iván (30 decisiones) en `D:\code\DapDucasse\ps9.1\dll_ax_dap004\DISEÑO.md`. Trabajo en la rama **`ps91`**, sin push.

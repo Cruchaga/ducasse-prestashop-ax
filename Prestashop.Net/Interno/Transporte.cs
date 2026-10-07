@@ -34,6 +34,9 @@ namespace Prestashop.Net.Interno
         /// <summary>Espera base entre reintentos: 1 s, 3 s, 9 s. Los tests la reducen.</summary>
         internal static int EsperaBaseMs = 1000;
 
+        /// <summary>TLS 1.2 = SslProtocols 0x00000C00, el mismo valor que fuerza la DLL 1.46 para PS 1.7.</summary>
+        internal const SecurityProtocolType Tls12 = (SecurityProtocolType)0x00000C00;
+
         private readonly Configuracion cfg;
         private readonly Registro log;
 
@@ -85,14 +88,20 @@ namespace Prestashop.Net.Interno
             HttpWebResponse resp = null;
             try
             {
+                // Solo TLS 1.2, igual que IntegracionPrestashopLib 1.46 (HttpRequestFunctions): se asigna (no se agrega)
+                // antes de CADA request, porque ServicePointManager es global al proceso de AX y otra librería puede
+                // haberlo cambiado. La enumeración Tls12 no existe en .NET 3.5: se usa el valor numérico.
                 try
                 {
-                    // TLS 1.2 (3072). La enumeración Tls12 no existe en .NET 3.5: se usa el valor numérico.
-                    ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
+                    ServicePointManager.SecurityProtocol = Tls12;
                 }
-                catch (NotSupportedException)
+                catch (NotSupportedException e)
                 {
-                    // Framework sin soporte de TLS 1.2: la conexión fallará con un error 102 explícito.
+                    // .NET 3.5 sin el soporte de TLS 1.2 (falta la actualización KB3154518 o .NET 4.5+ en la máquina).
+                    s.ErrorCode = Errores.TLS;
+                    s.ErrorMessage = "El .NET Framework de este servidor no soporta TLS 1.2, que la tienda exige. Instale la actualización de TLS 1.2 para .NET 3.5 (KB3154518) o .NET Framework 4.5 o superior.";
+                    s.Detalle = "NotSupportedException: " + e.Message;
+                    return s;
                 }
 
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(uri);

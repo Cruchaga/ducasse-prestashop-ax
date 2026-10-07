@@ -7,6 +7,25 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 
 ---
 
+# Sesión 2026-10-07 (2) — `prestashop-net.dll` 2.0.1: correcciones de la revisión de código
+
+Revisión: `D:\code\DapDucasse\ps9.1\dll_ax_dap004\revision-codigo-2026-10-07.md`. Se corrigen el hallazgo alto y los 6 medios:
+
+- **H-01** `Mascara`: RUT enmascarado por clave (`rut`, `empresaRut`), porque la tienda lo envía compacto y la regex exigía guion;
+  `razonSocial`, `texto` (mensajes) y `comentario` quedan con la inicial.
+- **H-02** `CrearProducto`: si un reintento recibe 500 "ya existe", consulta el SKU y, si el nombre coincide, lo da por creado
+  por el intento anterior (ErrorCode 0, `Detalle` lo explica).
+- **H-03** `Transporte`: esperas 1 s, 3 s y luego 9 s (antes crecían ×3 sin tope: con `ReintentosMax` 10, casi 3 h).
+- **H-04** `Transporte`: `InvalidDataException` (gzip dañado; no deriva de `IOException`) → `110` reintentable, en vez de `900`.
+- **H-05** fechas con zona según `DateTime.Kind` (`Z` o `±hh:mm`); sin Kind sigue siendo hora de Chile. Nuevo `CambioEstado.AgregarEnvioUtc`.
+- **H-06** propiedades estáticas `CodigoError`, `EstadoOrden` y `EstadoEnvio` (X++ no lee campos `const`); un test exige que
+  estén en sincronía con `Errores`, `Estados` y `EstadosEnvio`.
+- **H-07** `GetXxx(i)` devuelve `null` fuera de rango en vez de lanzar.
+- Versión **2.0.1** (DLL y consola). `ServidorFalso` acepta cuerpo binario y `Content-Encoding`. **61/61 tests** en net-4.5 y en
+  **net-3.5 (CLR 2)**: este PC sí tiene .NET 3.5 (`-framework=net-3.5`). Solo se agregó API pública; nada se renombró ni se quitó.
+- Pendiente: el lado PHP de H-01 (`dapintegracion/src/Service/Mascara.php`) y recompilar el paquete de entrega.
+
+
 
 # Sesión 2026-10-07 — TLS 1.2 forzado en `prestashop-net.dll` (pedido de Iván)
 

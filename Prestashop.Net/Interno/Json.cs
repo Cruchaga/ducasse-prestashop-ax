@@ -164,7 +164,7 @@ namespace Prestashop.Net.Interno
             if (v is int || v is long || v is short || v is byte) { sb.Append(Convert.ToInt64(v, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture)); return; }
             if (v is decimal) { sb.Append(((decimal)v).ToString(CultureInfo.InvariantCulture)); return; }
             if (v is double || v is float) { sb.Append(Convert.ToDouble(v, CultureInfo.InvariantCulture).ToString("R", CultureInfo.InvariantCulture)); return; }
-            if (v is DateTime) { EscribirTexto(sb, ((DateTime)v).ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture)); return; }
+            if (v is DateTime) { EscribirTexto(sb, FechaIso((DateTime)v)); return; }
             Dictionary<string, object> d = v as Dictionary<string, object>;
             if (d != null)
             {
@@ -196,6 +196,17 @@ namespace Prestashop.Net.Interno
                 return;
             }
             EscribirTexto(sb, Convert.ToString(v, CultureInfo.InvariantCulture));
+        }
+
+        /// <summary>
+        /// Fecha ISO 8601 según su Kind: Utc → "…Z"; Local → con la zona del servidor de AX ("…-03:00");
+        /// Unspecified → sin zona, que la tienda interpreta como hora de Chile (revisión 2026-10-07, H-05).
+        /// </summary>
+        public static string FechaIso(DateTime f)
+        {
+            if (f.Kind == DateTimeKind.Utc) return f.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
+            if (f.Kind == DateTimeKind.Local) return f.ToString("yyyy-MM-dd'T'HH:mm:sszzz", CultureInfo.InvariantCulture);
+            return f.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
         }
 
         private static void EscribirTexto(StringBuilder sb, string s)

@@ -85,7 +85,8 @@ namespace Prestashop.Net
 
         public int ResultadoCount { get { return Resultados.Count; } }
 
-        public ResultadoItem GetResultado(int i) { return Resultados[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public ResultadoItem GetResultado(int i) { return i >= 0 && i < Resultados.Count ? Resultados[i] : null; }
     }
 
     /// <summary>Respuesta de Ping: conectividad, versiones y hora del servidor.</summary>

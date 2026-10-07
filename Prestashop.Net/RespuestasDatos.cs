@@ -13,7 +13,8 @@ namespace Prestashop.Net
         private readonly List<OrdenDeVentaV2> ordenes = new List<OrdenDeVentaV2>();
 
         public int OrdenesCount { get { return ordenes.Count; } }
-        public OrdenDeVentaV2 GetOrden(int i) { return ordenes[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public OrdenDeVentaV2 GetOrden(int i) { return i >= 0 && i < ordenes.Count ? ordenes[i] : null; }
 
         /// <summary>Órdenes pendientes que quedaron fuera de esta respuesta por el límite. Si es mayor que 0, confirme y vuelva a llamar.</summary>
         public int PendientesRestantes { get; internal set; }

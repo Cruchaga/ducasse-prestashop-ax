@@ -34,7 +34,7 @@ namespace Prestashop.Net
         /// <summary>Tiempo máximo de espera por llamada, en segundos. Por defecto 120.</summary>
         public int TimeoutSegundos { get; set; }
 
-        /// <summary>Intentos por llamada ante errores transitorios (red, timeout, 5xx). Por defecto 3; 1 = sin reintentos.</summary>
+        /// <summary>Intentos por llamada ante errores transitorios (red, timeout, 5xx). Por defecto 3; 1 = sin reintentos; máximo 10. Esperas entre intentos: 1 s, 3 s y luego 9 s.</summary>
         public int ReintentosMax { get; set; }
 
         /// <summary>Carpeta del log local. Vacío = carpeta "prestashop-net/log" dentro de ProgramData. "-" = no escribir archivo.</summary>

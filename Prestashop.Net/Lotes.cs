@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using Prestashop.Net.Interno;
 
 namespace Prestashop.Net
 {
@@ -122,7 +123,11 @@ namespace Prestashop.Net
         /// <param name="estadoEnvio">Ver <see cref="EstadosEnvio"/>. Vacío = no cambiar el estado del envío.</param>
         /// <param name="tracking">Número de seguimiento del transportista. Vacío = no cambiar.</param>
         /// <param name="carrier">Nombre del transportista real (p. ej. "Chilexpress"). Vacío = no cambiar.</param>
-        /// <param name="fecha">Fecha del evento. DateTime.MinValue = ahora.</param>
+        /// <param name="fecha">
+        /// Fecha del evento. DateTime.MinValue = ahora. Viaja con zona según su Kind: Utc con "Z", Local con la zona
+        /// del servidor de AX; sin Kind (lo normal desde X++) se toma como hora de Chile. Para una fecha UTC de X++
+        /// (DateTimeUtil::getSystemDateTime) use <see cref="AgregarEnvioUtc"/>.
+        /// </param>
         public void AgregarEnvio(long idEnvio, string estadoEnvio, string tracking, string carrier, DateTime fecha)
         {
             Dictionary<string, object> d = new Dictionary<string, object>();
@@ -130,8 +135,15 @@ namespace Prestashop.Net
             d["estado"] = estadoEnvio ?? "";
             d["tracking"] = tracking ?? "";
             d["carrier"] = carrier ?? "";
-            d["fecha"] = fecha.Year > 2000 ? fecha.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture) : "";
+            d["fecha"] = fecha.Year > 2000 ? Json.FechaIso(fecha) : "";
             envios.Add(d);
+        }
+
+        /// <summary>Igual que <see cref="AgregarEnvio(long, string, string, string, DateTime)"/>, con la fecha en UTC (la marca así aunque venga sin Kind).</summary>
+        /// <param name="fechaUtc">Fecha del evento en UTC. DateTime.MinValue = ahora.</param>
+        public void AgregarEnvioUtc(long idEnvio, string estadoEnvio, string tracking, string carrier, DateTime fechaUtc)
+        {
+            AgregarEnvio(idEnvio, estadoEnvio, tracking, carrier, DateTime.SpecifyKind(fechaUtc, DateTimeKind.Utc));
         }
 
         /// <summary>Igual que el anterior, con la fecha de ahora.</summary>

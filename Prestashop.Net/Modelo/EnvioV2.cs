@@ -37,7 +37,8 @@ namespace Prestashop.Net
         public DateTime FechaEstado { get; internal set; }
 
         public int LineasCount { get { return lineas.Count; } }
-        public LineaEnvioV2 GetLinea(int i) { return lineas[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public LineaEnvioV2 GetLinea(int i) { return i >= 0 && i < lineas.Count ? lineas[i] : null; }
 
         public bool EsRetiro { get { return Tipo == "retiro"; } }
 

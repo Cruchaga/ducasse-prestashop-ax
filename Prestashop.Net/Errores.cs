@@ -124,4 +124,67 @@ namespace Prestashop.Net
         public const string Entregado = "entregado";
         public const string Error = "error";
     }
+
+    /// <summary>
+    /// Catálogo de códigos de error como propiedades estáticas.
+    /// Desde X++: Prestashop.Net.CodigoError::get_OK(). Los valores son los de <see cref="Errores"/>,
+    /// cuyos campos const X++ no puede leer (revisión 2026-10-07, H-06).
+    /// </summary>
+    public static class CodigoError
+    {
+        public static int OK { get { return Errores.OK; } }
+        public static int CONEXION { get { return Errores.CONEXION; } }
+        public static int TIMEOUT { get { return Errores.TIMEOUT; } }
+        public static int TLS { get { return Errores.TLS; } }
+        public static int REDIRECCION { get { return Errores.REDIRECCION; } }
+        public static int RESPUESTA_INVALIDA { get { return Errores.RESPUESTA_INVALIDA; } }
+        public static int AUTH_FIRMA { get { return Errores.AUTH_FIRMA; } }
+        public static int AUTH_CLAVE { get { return Errores.AUTH_CLAVE; } }
+        public static int AUTH_TIMESTAMP { get { return Errores.AUTH_TIMESTAMP; } }
+        public static int IP_NO_AUTORIZADA { get { return Errores.IP_NO_AUTORIZADA; } }
+        public static int VALIDACION { get { return Errores.VALIDACION; } }
+        public static int CONFIG_INVALIDA { get { return Errores.CONFIG_INVALIDA; } }
+        public static int NO_ENCONTRADO { get { return Errores.NO_ENCONTRADO; } }
+        public static int CONFLICTO_ESTADO { get { return Errores.CONFLICTO_ESTADO; } }
+        public static int RESULTADO_PARCIAL { get { return Errores.RESULTADO_PARCIAL; } }
+        public static int ERROR_SERVIDOR_PS { get { return Errores.ERROR_SERVIDOR_PS; } }
+        public static int MANTENIMIENTO { get { return Errores.MANTENIMIENTO; } }
+        public static int LIMITE { get { return Errores.LIMITE; } }
+        public static int NO_IMPLEMENTADO { get { return Errores.NO_IMPLEMENTADO; } }
+        public static int VERSION_CONTRATO { get { return Errores.VERSION_CONTRATO; } }
+        public static int NO_CONTROLADO { get { return Errores.NO_CONTROLADO; } }
+    }
+
+    /// <summary>
+    /// Ids de los estados de pedido como propiedades estáticas.
+    /// Desde X++: Prestashop.Net.EstadoOrden::get_PagoAceptado(). Los valores son los de <see cref="Estados"/>,
+    /// cuyos campos const X++ no puede leer (revisión 2026-10-07, H-06).
+    /// </summary>
+    public static class EstadoOrden
+    {
+        public static int PagoAceptado { get { return Estados.PagoAceptado; } }
+        public static int PreparacionEnCurso { get { return Estados.PreparacionEnCurso; } }
+        public static int EnRuta { get { return Estados.EnRuta; } }
+        public static int Entregado { get { return Estados.Entregado; } }
+        public static int Cancelado { get { return Estados.Cancelado; } }
+        public static int Reembolsado { get { return Estados.Reembolsado; } }
+        public static int ErrorEnPago { get { return Estados.ErrorEnPago; } }
+        public static int EnTienda { get { return Estados.EnTienda; } }
+        public static int ErrorEnDespacho { get { return Estados.ErrorEnDespacho; } }
+    }
+
+    /// <summary>
+    /// Estados de envío como propiedades estáticas.
+    /// Desde X++: Prestashop.Net.EstadoEnvio::get_Pendiente(). Los valores son los de <see cref="EstadosEnvio"/>,
+    /// cuyos campos const X++ no puede leer (revisión 2026-10-07, H-06).
+    /// </summary>
+    public static class EstadoEnvio
+    {
+        public static string Pendiente { get { return EstadosEnvio.Pendiente; } }
+        public static string Preparacion { get { return EstadosEnvio.Preparacion; } }
+        public static string Despachado { get { return EstadosEnvio.Despachado; } }
+        public static string EnTienda { get { return EstadosEnvio.EnTienda; } }
+        public static string Entregado { get { return EstadosEnvio.Entregado; } }
+        public static string Error { get { return EstadosEnvio.Error; } }
+    }
 }

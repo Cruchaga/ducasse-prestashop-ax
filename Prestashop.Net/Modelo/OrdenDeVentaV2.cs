@@ -56,16 +56,20 @@ namespace Prestashop.Net
         public string IdVentaAx { get; internal set; }
 
         public int EnviosCount { get { return envios.Count; } }
-        public EnvioV2 GetEnvio(int i) { return envios[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public EnvioV2 GetEnvio(int i) { return i >= 0 && i < envios.Count ? envios[i] : null; }
 
         public int LineasCount { get { return lineas.Count; } }
-        public LineaV2 GetLinea(int i) { return lineas[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public LineaV2 GetLinea(int i) { return i >= 0 && i < lineas.Count ? lineas[i] : null; }
 
         public int DescuentosCount { get { return descuentos.Count; } }
-        public DescuentoV2 GetDescuento(int i) { return descuentos[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public DescuentoV2 GetDescuento(int i) { return i >= 0 && i < descuentos.Count ? descuentos[i] : null; }
 
         public int MensajesCount { get { return mensajes.Count; } }
-        public MensajeV2 GetMensaje(int i) { return mensajes[i]; }
+        /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
+        public MensajeV2 GetMensaje(int i) { return i >= 0 && i < mensajes.Count ? mensajes[i] : null; }
 
         /// <summary>true si la orden pide factura (false = boleta).</summary>
         public bool EsFactura { get { return Documento != null && Documento.Tipo == "factura"; } }

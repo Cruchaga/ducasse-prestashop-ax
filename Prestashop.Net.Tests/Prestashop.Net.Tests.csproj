@@ -22,6 +22,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PruebasCorrecciones.cs" />
     <Compile Include="PruebasJsonFirma.cs" />
     <Compile Include="PruebasLogConfig.cs" />
     <Compile Include="PruebasLotesLog.cs" />

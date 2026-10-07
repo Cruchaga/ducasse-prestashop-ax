@@ -66,7 +66,7 @@ namespace Prestashop.Net.Tests
                 Assert.AreEqual("/dap-integracion/ordenes", q.Ruta);
                 Assert.AreEqual(Util.KeyId, q.Cabeceras["X-Dap-KeyId"]);
                 Assert.AreEqual("2.0", q.Cabeceras["X-Dap-Schema"]);
-                Assert.AreEqual("prestashop-net/2.0.0", q.Cabeceras["X-Dap-Client"]);
+                Assert.AreEqual("prestashop-net/" + Cliente.VersionDll, q.Cabeceras["X-Dap-Client"]);
                 Assert.AreEqual(r.ExecutionId, q.Cabeceras["X-Dap-ExecutionId"]);
                 Assert.AreEqual("Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("axdll:clave-staging")), q.Cabeceras["Authorization"]);
                 StringAssert.Contains("\"limite\":25", q.Cuerpo);

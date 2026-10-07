@@ -12,7 +12,9 @@ namespace Prestashop.Net
     /// Reglas del contrato:
     ///  - Ningún método lanza excepciones: el resultado está en ErrorCode (0 = OK) y ErrorMessage.
     ///  - "No se pudo consultar" y "no hay datos" son siempre distinguibles.
-    ///  - Todas las operaciones son idempotentes: repetir una llamada no duplica nada.
+    ///  - Repetir una llamada no duplica nada: ACK, cantidades y estados son absolutos. CrearProducto no es
+    ///    idempotente en el servidor (un SKU repetido da 500); si un reintento choca con eso, la DLL consulta
+    ///    el SKU y confirma la creación del intento anterior (ver CrearProducto).
     ///  - Cada llamada lleva un ExecutionId que aparece en el log local y en el registro de la tienda.
     /// </remarks>
     public class Cliente
@@ -37,7 +39,7 @@ namespace Prestashop.Net
         }
 
         /// <summary>Versión de la DLL.</summary>
-        public static string VersionDll { get { return "2.0.0"; } }
+        public static string VersionDll { get { return "2.0.1"; } }
 
         /// <summary>Versión del contrato que habla esta DLL.</summary>
         public static string SchemaVersion { get { return "2.0"; } }
@@ -320,18 +322,49 @@ namespace Prestashop.Net
             return r;
         }
 
-        /// <summary>Crea un producto simple. ErrorCode 500 si el SKU ya existe.</summary>
+        /// <summary>
+        /// Crea un producto simple. ErrorCode 500 si el SKU ya existe. Si el primer intento se cortó (timeout, red)
+        /// y el reintento recibe "ya existe", la DLL consulta el SKU: si el nombre coincide con el enviado lo da por
+        /// creado por el intento anterior (ErrorCode 0, Detalle lo explica); si no, deja el 500.
+        /// </summary>
         public RespuestaProducto CrearProducto(ProductoNuevo producto)
         {
+            ProductoNuevo pn = producto ?? new ProductoNuevo();
             RespuestaProducto r = new RespuestaProducto();
             Dictionary<string, object> datos = new Dictionary<string, object>();
-            datos["producto"] = (producto ?? new ProductoNuevo()).AJson();
+            datos["producto"] = pn.AJson();
             Ejecutar(r, "CrearProducto", "POST", "producto", datos, delegate(Dictionary<string, object> d)
             {
                 Dictionary<string, object> p = Json.Objeto(d, "producto");
                 if (p.Count > 0) r.Producto = ProductoV2.Desde(p);
             });
+            if (r.ErrorCode == Errores.CONFLICTO_ESTADO && r.Intentos > 1) ConfirmarCreacionTrasReintento(r, pn);
             return r;
+        }
+
+        /// <summary>
+        /// El servidor no es idempotente al crear: si el intento anterior creó el producto pero su respuesta se perdió,
+        /// el reintento recibe 500 "ya existe" (revisión 2026-10-07, H-02). Se consulta el SKU para distinguirlo de un
+        /// SKU que ya existía antes.
+        /// </summary>
+        private void ConfirmarCreacionTrasReintento(RespuestaProducto r, ProductoNuevo pn)
+        {
+            RespuestaProducto c = ObtenerProducto(pn.Sku);
+            r.Traza += c.Traza;
+            r.DuracionMs += c.DuracionMs;
+            string esperado = (pn.Nombre ?? "").Trim();
+            if (c.ErrorCode == 0 && c.Producto != null && esperado.Length > 0 && string.Equals((c.Producto.Nombre ?? "").Trim(), esperado, StringComparison.Ordinal))
+            {
+                r.ErrorCode = Errores.OK;
+                r.ErrorMessage = "";
+                r.Reintentable = false;
+                r.Producto = c.Producto;
+                r.Detalle = "El reintento encontró el SKU ya creado con el mismo nombre: se toma como creado por el intento anterior"
+                    + " (consulta " + c.ExecutionId + ").";
+                return;
+            }
+            r.Detalle = (r.Detalle.Length > 0 ? r.Detalle + " · " : "") + "Tras un reintento el SKU ya existía y no se pudo confirmar que lo creó el intento anterior"
+                + (c.ErrorCode != 0 ? " (la consulta respondió " + c.ErrorCode + ")" : " (el nombre no coincide)") + ".";
         }
 
         /// <summary>

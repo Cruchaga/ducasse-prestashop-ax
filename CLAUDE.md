@@ -99,7 +99,7 @@ Desde el 2026-10-01 el repo tiene **dos DLL independientes**:
 | Dependencias | Newtonsoft.Json 12.0.3, TPL backport | **ninguna** (JSON propio en `Interno/Json.cs`) |
 | Estado | congelada: solo correcciones | activa |
 
-Proyectos nuevos: `Prestashop.Net` (la DLL), `Prestashop.Net.Tests` (NUnit 2.6.4, 48 tests, servidor HTTP falso en
+Proyectos nuevos: `Prestashop.Net` (la DLL), `Prestashop.Net.Tests` (NUnit 2.6.4, 61 tests, servidor HTTP falso en
 `ServidorFalso.cs`) y `Prestashop.Net.Console` (escenarios; reemplaza al antiguo `Test`, que se eliminó por tener claves de
 producción en el código). Diseño, pruebas y paquete de entrega: `D:\code\DapDucasse\ps9.1\dll_ax_dap004\`.
 
@@ -123,6 +123,7 @@ REF="C:/Users/<usuario>/.nuget/packages/microsoft.netframework.referenceassembli
 dotnet msbuild Prestashop.Net.Tests/Prestashop.Net.Tests.csproj -p:Configuration=Release "-p:TargetFrameworkRootPath=$REF"
 dotnet msbuild Prestashop.Net.Console/Prestashop.Net.Console.csproj -p:Configuration=Release "-p:TargetFrameworkRootPath=$REF"
 packages/NUnit.Runners.2.6.4/tools/nunit-console.exe Prestashop.Net.Tests/bin/Release/Prestashop.Net.Tests.dll -process:Single
+packages/NUnit.Runners.2.6.4/tools/nunit-console.exe Prestashop.Net.Tests/bin/Release/Prestashop.Net.Tests.dll -framework=net-3.5   # CLR 2, como AX
 Prestashop.Net.Console/bin/Release/Prestashop.Net.Console.exe ping --env=<archivo.env>
 ```
 

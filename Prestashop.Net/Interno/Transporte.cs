@@ -34,6 +34,9 @@ namespace Prestashop.Net.Interno
         /// <summary>Espera base entre reintentos: 1 s, 3 s, 9 s. Los tests la reducen.</summary>
         internal static int EsperaBaseMs = 1000;
 
+        /// <summary>Tope de la espera entre reintentos, en múltiplos de la base: con ReintentosMax mayor que 4 las esperas siguen en 9 s.</summary>
+        internal const int EsperaMaximaFactor = 9;
+
         /// <summary>TLS 1.2 = SslProtocols 0x00000C00, el mismo valor que fuerza la DLL 1.46 para PS 1.7.</summary>
         internal const SecurityProtocolType Tls12 = (SecurityProtocolType)0x00000C00;
 
@@ -73,7 +76,8 @@ namespace Prestashop.Net.Interno
                     || s.ErrorCode == Errores.ERROR_SERVIDOR_PS || s.ErrorCode == Errores.MANTENIMIENTO
                     || (s.ErrorCode == Errores.LIMITE && s.HttpStatus == 429);
                 if (!transitorio || intento == maximo) break;
-                int espera = EsperaBaseMs * (int)Math.Pow(3, intento - 1);
+                // 1 s, 3 s, 9 s y luego 9 s: sin tope, ReintentosMax = 10 dormía casi 3 horas el hilo de AX (revisión 2026-10-07, H-03).
+                int espera = EsperaBaseMs * Math.Min(EsperaMaximaFactor, (int)Math.Pow(3, intento - 1));
                 log.Info("reintento", "intento " + intento + " de " + maximo + " falló con " + s.ErrorCode + " " + Errores.Nombre(s.ErrorCode)
                     + " (" + s.ErrorMessage + "); nuevo intento en " + espera + " ms");
                 Thread.Sleep(espera);
@@ -172,6 +176,20 @@ namespace Prestashop.Net.Interno
             {
                 s.ErrorCode = Errores.CONEXION;
                 s.ErrorMessage = "La conexión con la tienda se cortó mientras se leía la respuesta.";
+                s.Detalle = e.GetType().Name + ": " + e.Message;
+            }
+            catch (InvalidDataException e)
+            {
+                // Cuerpo gzip/deflate dañado o cortado. InvalidDataException NO deriva de IOException: sin este catch
+                // terminaba en 900 NO_CONTROLADO, sin reintento (revisión 2026-10-07, H-04).
+                s.ErrorCode = Errores.RESPUESTA_INVALIDA;
+                s.ErrorMessage = "La respuesta comprimida de la tienda llegó dañada o incompleta.";
+                s.Detalle = "HTTP " + s.HttpStatus + " · " + e.GetType().Name + ": " + e.Message;
+            }
+            catch (ProtocolViolationException e)
+            {
+                s.ErrorCode = Errores.CONEXION;
+                s.ErrorMessage = "La conexión con la tienda no respetó el protocolo HTTP.";
                 s.Detalle = e.GetType().Name + ": " + e.Message;
             }
             finally

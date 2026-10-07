@@ -25,6 +25,10 @@ namespace Prestashop.Net.Tests
         public string ContentType = "application/json; charset=utf-8";
         public string Location;
         public int DemoraMs;
+        /// <summary>Cuerpo binario tal cual (p. ej. gzip); si se define, reemplaza a Cuerpo.</summary>
+        public byte[] CuerpoBytes;
+        /// <summary>Cabecera Content-Encoding a enviar (p. ej. "gzip").</summary>
+        public string ContentEncoding;
         /// <summary>Si se define, el cuerpo se calcula a partir de la request (para lotes).</summary>
         public Converter<RequestRecibida, string> Generador;
     }
@@ -106,12 +110,13 @@ namespace Prestashop.Net.Tests
                         }
                         if (r.DemoraMs > 0) Thread.Sleep(r.DemoraMs);
                         string cuerpoTexto = r.Generador != null ? r.Generador(req) : r.Cuerpo;
-                        byte[] cuerpo = Encoding.UTF8.GetBytes(cuerpoTexto);
+                        byte[] cuerpo = r.CuerpoBytes ?? Encoding.UTF8.GetBytes(cuerpoTexto ?? "");
                         StringBuilder cab = new StringBuilder();
                         cab.Append("HTTP/1.1 ").Append(r.Estado).Append(" X\r\n");
                         cab.Append("Content-Type: ").Append(r.ContentType).Append("\r\n");
                         cab.Append("Content-Length: ").Append(cuerpo.Length).Append("\r\n");
                         if (r.Location != null) cab.Append("Location: ").Append(r.Location).Append("\r\n");
+                        if (r.ContentEncoding != null) cab.Append("Content-Encoding: ").Append(r.ContentEncoding).Append("\r\n");
                         cab.Append("Connection: close\r\n\r\n");
                         byte[] c = Encoding.ASCII.GetBytes(cab.ToString());
                         red.Write(c, 0, c.Length);

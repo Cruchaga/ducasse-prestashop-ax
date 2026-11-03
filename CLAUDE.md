@@ -88,14 +88,14 @@ Las órdenes que se procesan están en estados **2 (Pago aceptado)** y
    `Task.Run` en paralelo y luego `Task.WaitAll`. Cualquier estado compartido debe
    ser thread-safe.
 
-## prestashop-net.dll — DLL nueva para PrestaShop 9.1 (rama `ps91`)
+## PrestaShopNet.dll — DLL nueva para PrestaShop 9.1 (rama `ps91`)
 
 Desde el 2026-10-01 el repo tiene **dos DLL independientes**:
 
 | | `IntegraciónPrestashopLib` (1.46) | `Prestashop.Net` (2.0) |
 |---|---|---|
 | Tienda | PS 1.7 (dapducasse.cl hasta el cutover, stockinsumos.cl) | PS 9.1 (módulo `dapintegracion`) |
-| Ensamblado | `IntegracionPrestashopLib.dll` | **`prestashop-net.dll`** (namespace `Prestashop.Net`) |
+| Ensamblado | `IntegracionPrestashopLib.dll` | **`PrestaShopNet.dll`** (namespace `Prestashop.Net`; hasta la 2.0.1 se llamaba `prestashop-net.dll`) |
 | Dependencias | Newtonsoft.Json 12.0.3, TPL backport | **ninguna** (JSON propio en `Interno/Json.cs`) |
 | Estado | congelada: solo correcciones | activa |
 

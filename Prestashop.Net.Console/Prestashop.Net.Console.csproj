@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Prestashop.Net.Consola</RootNamespace>
-    <AssemblyName>Prestashop.Net.Console</AssemblyName>
+    <AssemblyName>PrestaShopNet.Console</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>3</LangVersion>

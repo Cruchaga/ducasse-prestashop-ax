@@ -56,6 +56,11 @@ namespace Prestashop.Net.Tests
             Assert.AreEqual("Construcción", o.Documento.Giro);
             Assert.AreEqual("Providencia", o.DireccionEntrega.Comuna);
             Assert.AreEqual(470, o.DireccionEntrega.IdComuna);
+            Assert.AreEqual("13123", o.DireccionEntrega.ComunaCodAx, "código INE de la comuna para AX");
+            Assert.AreEqual("", o.DireccionEntrega.Ciudad);
+            Assert.AreEqual("13101", o.Documento.ComunaCodAxEmpresa);
+            Assert.AreEqual("", o.DireccionFacturacion.ComunaCodAx, "una tienda sin el campo (módulo 1.1.0) lo deja vacío");
+            Assert.AreEqual("", o.DireccionFacturacion.Ciudad);
             Assert.AreEqual("Av. O'Higgins 1460", o.DireccionFacturacion.Calle);
             Assert.AreEqual("entregada", o.EstadoIntegracion);
             Assert.AreEqual(2, o.Entregas);

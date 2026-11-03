@@ -43,7 +43,7 @@ namespace Prestashop.Net.Interno
             }
             else
             {
-                carpeta = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "prestashop-net"), "log");
+                carpeta = Path.Combine(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "PrestaShopNet"), "log");
             }
         }
 
@@ -78,7 +78,7 @@ namespace Prestashop.Net.Interno
                 lock (Candado)
                 {
                     if (!Directory.Exists(carpeta)) Directory.CreateDirectory(carpeta);
-                    string archivo = Path.Combine(carpeta, "prestashop-net-" + DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + ".log");
+                    string archivo = Path.Combine(carpeta, "PrestaShopNet-" + DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture) + ".log");
                     // FileShare.ReadWrite: varios procesos de AX pueden escribir el mismo archivo.
                     using (FileStream fs = new FileStream(archivo, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                     using (StreamWriter w = new StreamWriter(fs, new UTF8Encoding(false)))
@@ -102,7 +102,7 @@ namespace Prestashop.Net.Interno
             ultimaPurga = DateTime.Today;
             try
             {
-                foreach (string f in Directory.GetFiles(carpeta, "prestashop-net-*.log"))
+                foreach (string f in Directory.GetFiles(carpeta, "PrestaShopNet-*.log"))
                 {
                     if (File.GetLastWriteTime(f) < DateTime.Today.AddDays(-dias)) File.Delete(f);
                 }

@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Prestashop.Net</RootNamespace>
-    <AssemblyName>prestashop-net</AssemblyName>
+    <AssemblyName>PrestaShopNet</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <LangVersion>3</LangVersion>
@@ -28,7 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\prestashop-net.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\PrestaShopNet.xml</DocumentationFile>
     <NoWarn>1591;1573</NoWarn>
   </PropertyGroup>
   <ItemGroup>

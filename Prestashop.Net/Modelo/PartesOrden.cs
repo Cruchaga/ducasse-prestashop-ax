@@ -39,6 +39,8 @@ namespace Prestashop.Net
         public string NombreFantasia { get; internal set; }
         public string DireccionEmpresa { get; internal set; }
         public string ComunaEmpresa { get; internal set; }
+        /// <summary>Código de la comuna de la empresa para AX (INE de 5 dígitos, p. ej. "13101"). Vacío si no hay empresa.</summary>
+        public string ComunaCodAxEmpresa { get; internal set; }
         public string RegionEmpresa { get; internal set; }
 
         internal static DocumentoV2 Desde(Dictionary<string, object> d)
@@ -52,12 +54,13 @@ namespace Prestashop.Net
             x.NombreFantasia = Json.Texto(d, "nombreFantasia");
             x.DireccionEmpresa = Json.Texto(d, "direccionEmpresa");
             x.ComunaEmpresa = Json.Texto(d, "comunaEmpresa");
+            x.ComunaCodAxEmpresa = Json.Texto(d, "comunaCodAxEmpresa");
             x.RegionEmpresa = Json.Texto(d, "regionEmpresa");
             return x;
         }
     }
 
-    /// <summary>Dirección chilena: calle, complemento, comuna y región (no hay campo ciudad).</summary>
+    /// <summary>Dirección chilena: calle, complemento, comuna, ciudad y región.</summary>
     public class DireccionV2
     {
         public long IdDireccion { get; internal set; }
@@ -65,8 +68,12 @@ namespace Prestashop.Net
         public string Calle { get; internal set; }
         public string Complemento { get; internal set; }
         public string Comuna { get; internal set; }
-        /// <summary>Id de la comuna en PrestaShop (id_state).</summary>
+        /// <summary>Id interno de la comuna en PrestaShop (id_state). No es el código de AX: ver <see cref="ComunaCodAx"/>.</summary>
         public int IdComuna { get; internal set; }
+        /// <summary>Código de la comuna para AX (INE de 5 dígitos, p. ej. "13101"; el AddressCounty de la DLL de PS 1.7).</summary>
+        public string ComunaCodAx { get; internal set; }
+        /// <summary>Ciudad guardada en la dirección. Hoy llega vacía porque la tienda todavía no la guarda.</summary>
+        public string Ciudad { get; internal set; }
         public string Region { get; internal set; }
         public string Telefono { get; internal set; }
 
@@ -79,6 +86,8 @@ namespace Prestashop.Net
             x.Complemento = Json.Texto(d, "complemento");
             x.Comuna = Json.Texto(d, "comuna");
             x.IdComuna = Json.Entero(d, "idComuna");
+            x.ComunaCodAx = Json.Texto(d, "comunaCodAx");
+            x.Ciudad = Json.Texto(d, "ciudad");
             x.Region = Json.Texto(d, "region");
             x.Telefono = Json.Texto(d, "telefono");
             return x;

@@ -6,7 +6,7 @@ using Prestashop.Net.Interno;
 namespace Prestashop.Net
 {
     /// <summary>
-    /// Punto de entrada de prestashop-net.dll: todo lo que Dynamics AX hace contra la tienda PrestaShop 9.1.
+    /// Punto de entrada de PrestaShopNet.dll: todo lo que Dynamics AX hace contra la tienda PrestaShop 9.1.
     /// </summary>
     /// <remarks>
     /// Reglas del contrato:
@@ -39,12 +39,12 @@ namespace Prestashop.Net
         }
 
         /// <summary>Versión de la DLL.</summary>
-        public static string VersionDll { get { return "2.0.1"; } }
+        public static string VersionDll { get { return "2.0.3"; } }
 
         /// <summary>Versión del contrato que habla esta DLL.</summary>
         public static string SchemaVersion { get { return "2.0"; } }
 
-        internal static string AgenteUsuario { get { return "prestashop-net/" + VersionDll; } }
+        internal static string AgenteUsuario { get { return "PrestaShopNet/" + VersionDll; } }
 
         /// <summary>Configuración en uso (para ajustar timeouts o el log después de crear el cliente).</summary>
         public Configuracion Configuracion { get { return cfg; } }
@@ -99,7 +99,7 @@ namespace Prestashop.Net
             catch (Exception e)
             {
                 r.ErrorCode = Errores.NO_CONTROLADO;
-                r.ErrorMessage = "Error no controlado en prestashop-net.dll: " + e.Message;
+                r.ErrorMessage = "Error no controlado en PrestaShopNet.dll: " + e.Message;
                 r.Detalle = e.ToString();
                 r.Reintentable = false;
                 try

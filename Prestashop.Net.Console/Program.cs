@@ -7,7 +7,7 @@ using System.Text;
 namespace Prestashop.Net.Consola
 {
     /// <summary>
-    /// Consola de escenarios de prestashop-net.dll: hace lo mismo que hará el X++ de AX, usando solo la API
+    /// Consola de escenarios de PrestaShopNet.dll: hace lo mismo que hará el X++ de AX, usando solo la API
     /// pública de la DLL. Reemplaza a la antigua consola "Test".
     /// </summary>
     /// <remarks>
@@ -37,7 +37,7 @@ namespace Prestashop.Net.Consola
             {
                 Configuracion cfg = CargarConfiguracion();
                 Cliente cliente = new Cliente(cfg);
-                Console.WriteLine("prestashop-net " + Cliente.VersionDll + " (contrato " + Cliente.SchemaVersion + ") → " + cfg.Url);
+                Console.WriteLine("PrestaShopNet " + Cliente.VersionDll + " (contrato " + Cliente.SchemaVersion + ") → " + cfg.Url);
                 return Escenarios.Ejecutar(cliente, Argumentos, Opciones);
             }
             catch (Exception e)
@@ -108,7 +108,7 @@ namespace Prestashop.Net.Consola
 
         private static void Ayuda()
         {
-            Console.WriteLine(@"Consola de escenarios de prestashop-net.dll
+            Console.WriteLine(@"Consola de escenarios de PrestaShopNet.dll
 
 Uso:  Prestashop.Net.Console <escenario> [argumentos] [--env=archivo] [--si] [--json=archivo] [--traza] [--debug]
 

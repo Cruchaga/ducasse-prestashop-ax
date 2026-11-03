@@ -19,7 +19,7 @@ namespace Prestashop.Net.Tests
                     Configuracion c = Util.Config(s.Url);
                     c.LogRuta = carpeta;
                     RespuestaPing r = new Cliente(c).Ping();
-                    string[] archivos = Directory.GetFiles(carpeta, "prestashop-net-*.log");
+                    string[] archivos = Directory.GetFiles(carpeta, "PrestaShopNet-*.log");
                     Assert.AreEqual(1, archivos.Length);
                     string log = File.ReadAllText(archivos[0]);
                     StringAssert.Contains(r.ExecutionId, log);

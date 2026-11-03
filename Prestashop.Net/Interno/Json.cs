@@ -9,7 +9,7 @@ namespace Prestashop.Net.Interno
     /// JSON mínimo y sin dependencias (lector y escritor) para el protocolo de dapintegracion.
     /// </summary>
     /// <remarks>
-    /// prestashop-net.dll no referencia Newtonsoft.Json a propósito: AX carga varias DLL en el mismo
+    /// PrestaShopNet.dll no referencia Newtonsoft.Json a propósito: AX carga varias DLL en el mismo
     /// proceso y una sola carpeta no puede tener dos versiones de Newtonsoft.Json.dll (la DLL 1.46 usa
     /// la 12.0.3, que además tiene una vulnerabilidad conocida de desbordamiento por anidamiento).
     /// Este lector limita la profundidad y solo produce: Dictionary&lt;string, object&gt;, List&lt;object&gt;,

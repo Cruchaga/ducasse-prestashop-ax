@@ -3,7 +3,7 @@ using System;
 namespace Prestashop.Net
 {
     /// <summary>
-    /// Datos de conexión de prestashop-net.dll con la tienda. AX los guarda en su tabla de parámetros
+    /// Datos de conexión de PrestaShopNet.dll con la tienda. AX los guarda en su tabla de parámetros
     /// y los entrega al crear el <see cref="Cliente"/>.
     /// </summary>
     /// <remarks>
@@ -37,7 +37,7 @@ namespace Prestashop.Net
         /// <summary>Intentos por llamada ante errores transitorios (red, timeout, 5xx). Por defecto 3; 1 = sin reintentos; máximo 10. Esperas entre intentos: 1 s, 3 s y luego 9 s.</summary>
         public int ReintentosMax { get; set; }
 
-        /// <summary>Carpeta del log local. Vacío = carpeta "prestashop-net/log" dentro de ProgramData. "-" = no escribir archivo.</summary>
+        /// <summary>Carpeta del log local. Vacío = carpeta "PrestaShopNet/log" dentro de ProgramData. "-" = no escribir archivo.</summary>
         public string LogRuta { get; set; }
 
         /// <summary>"Info" (por defecto) o "Debug" (agrega request y response con datos personales enmascarados).</summary>

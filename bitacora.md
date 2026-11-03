@@ -7,6 +7,31 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 
 ---
 
+# Sesión 2026-11-03 — 2.0.3: código de comuna para AX y ciudad
+
+Observaciones de Iván Jerez (WhatsApp, 3-nov): `IdComuna` no es el código que AX conoce y no hay ciudad.
+
+- `DireccionV2` agrega **`ComunaCodAx`** (código INE de 5 dígitos como texto, el mismo `AddressCounty` que calculaba la DLL
+  1.46 desde `ps_state.iso_code` hexadecimal) y **`Ciudad`** (de `ps_address.city`; hoy vacía porque la tienda no la guarda); `DocumentoV2` agrega **`ComunaCodAxEmpresa`**.
+  Campos nuevos del JSON: `comunaCodAx`, `ciudad`, `comunaCodAxEmpresa`; si la tienda no los manda, quedan en `""`.
+- Del lado de la tienda: `dapintegracion` 1.1.1 con la tabla `ps_dap_integracion_comuna`, cargada con los códigos de PS 1.7.
+- Pruebas: 61/61 en .NET 4.x y en CLR 2 (fixture con los campos nuevos en la dirección de entrega y sin ellos en la de
+  facturación); orden 31 contra v3: Maipú `13119`, empresa `13101`, ciudad vacía; orden 70 con ciudad `Providencia`.
+- Entrega: `D:/code/DapDucasse/ps9.1/dll_ax_dap004/entrega-PrestaShopNet-v2.0.3/` (+ zip). Versión 2.0.2 → **2.0.3**.
+
+# Sesión 2026-11-02 — 2.0.2: el ensamblado pasa a llamarse `PrestaShopNet.dll`
+
+Pedido de Iván Jerez (WhatsApp, 2-nov): el guion de `prestashop-net` le molesta al referenciar la DLL en AX.
+
+- `AssemblyName` `prestashop-net` → **`PrestaShopNet`** (`.dll`, `.pdb`, `.xml`); la consola pasa a `PrestaShopNet.Console.exe`.
+  **El namespace `Prestashop.Net` y toda la API pública no cambian**: el X++ escrito sigue igual.
+- Mismo renombre en el `User-Agent` / `X-Dap-Client` (`PrestaShopNet/2.0.2`) y en el log local
+  (`%ProgramData%/PrestaShopNet/log/PrestaShopNet-AAAAMMDD.log`). Versión 2.0.1 → **2.0.2**.
+- Pruebas: 61/61 en .NET 4.x y en CLR 2 (`-framework=net-3.5`); `ping` real contra v3 OK (registrado como `PrestaShopNet/2.0.2`).
+- Entrega: `D:/code/DapDucasse/ps9.1/dll_ax_dap004/entrega-PrestaShopNet-v2.0.2/` (+ zip).
+
+---
+
 # Sesión 2026-10-07 (2) — `prestashop-net.dll` 2.0.1: correcciones de la revisión de código
 
 Revisión: `D:\code\DapDucasse\ps9.1\dll_ax_dap004\revision-codigo-2026-10-07.md`. Se corrigen el hallazgo alto y los 6 medios:

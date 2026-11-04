@@ -39,7 +39,7 @@ namespace Prestashop.Net
         }
 
         /// <summary>Versión de la DLL.</summary>
-        public static string VersionDll { get { return "2.0.3"; } }
+        public static string VersionDll { get { return "2.0.4"; } }
 
         /// <summary>Versión del contrato que habla esta DLL.</summary>
         public static string SchemaVersion { get { return "2.0"; } }

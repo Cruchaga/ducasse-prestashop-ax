@@ -7,6 +7,18 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 
 ---
 
+# Sesión 2026-11-04 — 2.0.4: `IdComuna` entrega el código AX
+
+Iván Jerez (4-nov): "la DLL sigue devolviendo un Id de comuna extraño". Usaba `IdComuna` (id_state de la tienda).
+A pedido de Iván, `IdComuna` entrega ahora el código AX.
+
+- `DireccionV2.IdComuna`: **`int` → `string`**, igual a `ComunaCodAx` (INE de 5 dígitos con el cero, como `AddressCounty`
+  en 1.46). Vacío si la tienda no manda código. El `idComuna` del JSON (id_state) ya no se expone. Sin cambios en la tienda.
+- **Cambio de tipo incompatible:** el X++ que asignaba `get_IdComuna()` a un `int` debe pasar a `str`.
+- Pruebas: 61/61 en .NET 4.x y en CLR 2 (asserts de `IdComuna` = código AX y vacío sin código). Contra v3: orden 31
+  Maipú `"13119"`, orden 217 Isla de Pascua `"05201"`.
+- Entrega: `D:/code/DapDucasse/ps9.1/dll_ax_dap004/entrega-PrestaShopNet-v2.0.4/` (+ zip). Versión 2.0.3 → **2.0.4**.
+
 # Sesión 2026-11-03 — 2.0.3: código de comuna para AX y ciudad
 
 Observaciones de Iván Jerez (WhatsApp, 3-nov): `IdComuna` no es el código que AX conoce y no hay ciudad.

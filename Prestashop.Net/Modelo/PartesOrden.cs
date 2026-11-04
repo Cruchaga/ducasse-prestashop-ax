@@ -68,8 +68,9 @@ namespace Prestashop.Net
         public string Calle { get; internal set; }
         public string Complemento { get; internal set; }
         public string Comuna { get; internal set; }
-        /// <summary>Id interno de la comuna en PrestaShop (id_state). No es el código de AX: ver <see cref="ComunaCodAx"/>.</summary>
-        public int IdComuna { get; internal set; }
+        /// <summary>Código de la comuna para AX como texto (INE de 5 dígitos con el cero, p. ej. "01101"); igual a
+        /// <see cref="ComunaCodAx"/>. Hasta la 2.0.3 era el id_state de la tienda (int). Vacío si la comuna no tiene código.</summary>
+        public string IdComuna { get; internal set; }
         /// <summary>Código de la comuna para AX (INE de 5 dígitos, p. ej. "13101"; el AddressCounty de la DLL de PS 1.7).</summary>
         public string ComunaCodAx { get; internal set; }
         /// <summary>Ciudad guardada en la dirección. Hoy llega vacía porque la tienda todavía no la guarda.</summary>
@@ -85,8 +86,9 @@ namespace Prestashop.Net
             x.Calle = Json.Texto(d, "calle");
             x.Complemento = Json.Texto(d, "complemento");
             x.Comuna = Json.Texto(d, "comuna");
-            x.IdComuna = Json.Entero(d, "idComuna");
+            // El "idComuna" del JSON es el id_state de la tienda y AX no lo conoce: se entrega el código AX.
             x.ComunaCodAx = Json.Texto(d, "comunaCodAx");
+            x.IdComuna = x.ComunaCodAx;
             x.Ciudad = Json.Texto(d, "ciudad");
             x.Region = Json.Texto(d, "region");
             x.Telefono = Json.Texto(d, "telefono");

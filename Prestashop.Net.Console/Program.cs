@@ -120,6 +120,7 @@ Lectura (no modifican la tienda):
 Escritura (piden confirmación; --si la da por adelantado):
   ordenes [limite]                   descarga las pendientes y las marca como entregadas
   confirmar <id>[:ventaAx] ...       confirma órdenes ya integradas en AX
+  reabrir <id|referencia>:<motivo> ...  devuelve órdenes confirmadas a pendiente para volver a descargarlas
   estado <idOrden> <idEstado> [idEnvio:estado:tracking:carrier ...] [--sin-correo]
   precio <sku> <precioNeto>          precio neto de un SKU
   stock <sku> <cantidad>             stock absoluto de un SKU

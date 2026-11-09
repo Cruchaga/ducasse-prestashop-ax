@@ -62,12 +62,12 @@ namespace Prestashop.Net
             Resultado = "";
         }
 
-        /// <summary>SKU o id de orden del ítem.</summary>
+        /// <summary>SKU, id de orden o referencia del ítem (la referencia en ReabrirOrdenPorReferencia).</summary>
         public string Clave { get; set; }
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
 
-        /// <summary>"actualizado", "sin_cambio", "confirmada" (vacío si el ítem falló).</summary>
+        /// <summary>"actualizado", "sin_cambio", "confirmada", "reabierta" (vacío si el ítem falló).</summary>
         public string Resultado { get; set; }
     }
 

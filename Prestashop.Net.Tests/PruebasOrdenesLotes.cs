@@ -65,6 +65,9 @@ namespace Prestashop.Net.Tests
             Assert.AreEqual("Av. O'Higgins 1460", o.DireccionFacturacion.Calle);
             Assert.AreEqual("entregada", o.EstadoIntegracion);
             Assert.AreEqual(2, o.Entregas);
+            Assert.AreEqual(1, o.Reaperturas, "reabierta una vez");
+            Assert.AreEqual("OV-000123", o.IdVentaAxAnterior, "SalesId con que se había confirmado antes de reabrirla");
+            Assert.AreEqual(0, Obtener(0).GetOrden(1).Reaperturas, "una tienda sin el campo (módulo 1.1.x) lo deja en 0");
         }
 
         [Test]

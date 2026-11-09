@@ -42,6 +42,30 @@ namespace Prestashop.Net
         }
     }
 
+    /// <summary>Órdenes ya confirmadas que AX necesita volver a descargar. Para Cliente.ReabrirOrdenes.</summary>
+    public class LoteReapertura : Lote
+    {
+        /// <param name="idOrden">OrdenDeVentaV2.IdOrden.</param>
+        /// <param name="motivo">Por qué se reabre (p. ej. "Borrada del monitor por error"). Obligatorio: queda registrado en la tienda.</param>
+        public void Agregar(long idOrden, string motivo)
+        {
+            Dictionary<string, object> d = new Dictionary<string, object>();
+            d["idOrden"] = idOrden;
+            d["motivo"] = motivo ?? "";
+            Sumar(idOrden.ToString(CultureInfo.InvariantCulture), d);
+        }
+
+        /// <summary>Igual que <see cref="Agregar"/>, identificando la orden por su referencia (OrdenDeVentaV2.Referencia, p. ej. "CQCGMZSXH").
+        /// La clave del resultado es la referencia; si la referencia es de varios pedidos, la tienda responde 500.</summary>
+        public void AgregarPorReferencia(string referencia, string motivo)
+        {
+            Dictionary<string, object> d = new Dictionary<string, object>();
+            d["referencia"] = referencia ?? "";
+            d["motivo"] = motivo ?? "";
+            Sumar(referencia, d);
+        }
+    }
+
     /// <summary>Precios netos (sin IVA) por SKU. Para Cliente.ActualizarPrecios.</summary>
     public class LotePrecios : Lote
     {

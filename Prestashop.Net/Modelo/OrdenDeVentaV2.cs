@@ -54,6 +54,11 @@ namespace Prestashop.Net
         public int Entregas { get; internal set; }
         /// <summary>Número de venta de AX informado al confirmar (vacío si aún no se confirma).</summary>
         public string IdVentaAx { get; internal set; }
+        /// <summary>Veces que la orden se reabrió (Cliente.ReabrirOrdenes o el back office). 0 = nunca.</summary>
+        public int Reaperturas { get; internal set; }
+        /// <summary>SalesId con que se había confirmado antes de la última reapertura (vacío si nunca se reabrió confirmada).
+        /// Sirve para no crear la venta dos veces en AX.</summary>
+        public string IdVentaAxAnterior { get; internal set; }
 
         public int EnviosCount { get { return envios.Count; } }
         /// <summary>Elemento i (desde 0), o null si i está fuera de rango (no lanza hacia AX).</summary>
@@ -108,6 +113,8 @@ namespace Prestashop.Net
             o.EstadoIntegracion = Json.Texto(i, "estado");
             o.Entregas = Json.Entero(i, "entregas");
             o.IdVentaAx = Json.Texto(i, "idVentaAx");
+            o.Reaperturas = Json.Entero(i, "reaperturas");
+            o.IdVentaAxAnterior = Json.Texto(i, "idVentaAxAnterior");
             foreach (Dictionary<string, object> x in Json.Lista(d, "envios")) o.envios.Add(EnvioV2.Desde(x));
             foreach (Dictionary<string, object> x in Json.Lista(d, "lineas")) o.lineas.Add(LineaV2.Desde(x));
             foreach (Dictionary<string, object> x in Json.Lista(d, "descuentos")) o.descuentos.Add(DescuentoV2.Desde(x));

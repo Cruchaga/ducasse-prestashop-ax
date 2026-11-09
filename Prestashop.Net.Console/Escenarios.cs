@@ -45,6 +45,17 @@ namespace Prestashop.Net.Consola
                     }
                     if (!Confirmar("Confirmar " + lc.Count + " órdenes como integradas en AX")) return 2;
                     return Lote("ConfirmarOrdenes", c.ConfirmarOrdenes(lc));
+                case "reabrir":
+                    LoteReapertura lr = new LoteReapertura();
+                    for (int i = 1; i < a.Count; i++)
+                    {
+                        string[] par = a[i].Split(new char[] { ':' }, 2);
+                        long id;
+                        if (long.TryParse(par[0], NumberStyles.None, CultureInfo.InvariantCulture, out id)) lr.Agregar(id, par.Length > 1 ? par[1] : "");
+                        else lr.AgregarPorReferencia(par[0], par.Length > 1 ? par[1] : "");
+                    }
+                    if (!Confirmar("Reabrir " + lr.Count + " órdenes (vuelven a pendiente y AX las descarga de nuevo)")) return 2;
+                    return Lote("ReabrirOrdenes", c.ReabrirOrdenes(lr));
                 case "estado":
                     CambioEstado ce = new CambioEstado(long.Parse(a[1], CultureInfo.InvariantCulture), int.Parse(a[2], CultureInfo.InvariantCulture));
                     ce.EnviarCorreo = !opciones.Contains("--sin-correo");
@@ -184,7 +195,8 @@ namespace Prestashop.Net.Consola
         private static void Orden(OrdenDeVentaV2 o, bool detalle)
         {
             Console.WriteLine("  Orden " + o.IdOrden + " " + o.Referencia + " · " + o.FechaCreacion.ToString("yyyy-MM-dd HH:mm") + " · estado " + o.IdEstado + " " + o.Estado
-                + " · integración " + o.EstadoIntegracion + (o.IdVentaAx.Length > 0 ? " (" + o.IdVentaAx + ")" : ""));
+                + " · integración " + o.EstadoIntegracion + (o.IdVentaAx.Length > 0 ? " (" + o.IdVentaAx + ")" : "")
+                + (o.Reaperturas > 0 ? " · reabierta " + o.Reaperturas + "x" + (o.IdVentaAxAnterior.Length > 0 ? ", venta anterior " + o.IdVentaAxAnterior : "") : ""));
             if (o.ErrorCode != 0)
             {
                 Console.WriteLine("    ERROR " + o.ErrorCode + ": " + o.ErrorMessage);

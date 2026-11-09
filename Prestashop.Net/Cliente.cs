@@ -39,7 +39,7 @@ namespace Prestashop.Net
         }
 
         /// <summary>Versión de la DLL.</summary>
-        public static string VersionDll { get { return "2.0.4"; } }
+        public static string VersionDll { get { return "2.1.1"; } }
 
         /// <summary>Versión del contrato que habla esta DLL.</summary>
         public static string SchemaVersion { get { return "2.0"; } }
@@ -271,6 +271,34 @@ namespace Prestashop.Net
             LoteConfirmacion l = new LoteConfirmacion();
             l.Agregar(idOrden, idVentaAx);
             return ConfirmarOrdenes(l);
+        }
+
+        /// <summary>
+        /// Devuelve a pendiente órdenes que AX ya confirmó, para que el siguiente <see cref="ObtenerOrdenes(int)"/> las
+        /// entregue de nuevo (p. ej. se borraron del monitor de AX). El SalesId de la confirmación queda guardado como
+        /// <see cref="OrdenDeVentaV2.IdVentaAxAnterior"/> y la orden se puede volver a confirmar con otro.
+        /// Resultado por orden: "reabierta"; "sin_cambio" si no estaba confirmada (igual vuelve a llegar);
+        /// 500 si su estado no se entrega a AX (p. ej. cancelada): reabrirla no la haría volver.
+        /// </summary>
+        public RespuestaLote ReabrirOrdenes(LoteReapertura lote)
+        {
+            return EjecutarLote("ReabrirOrdenes", "ordenes-reabrir", lote, null);
+        }
+
+        /// <summary>Reabre una sola orden. Ver <see cref="ReabrirOrdenes"/>.</summary>
+        public RespuestaLote ReabrirOrden(long idOrden, string motivo)
+        {
+            LoteReapertura l = new LoteReapertura();
+            l.Agregar(idOrden, motivo);
+            return ReabrirOrdenes(l);
+        }
+
+        /// <summary>Reabre una sola orden identificada por su referencia (OrdenDeVentaV2.Referencia). Ver <see cref="ReabrirOrdenes"/>.</summary>
+        public RespuestaLote ReabrirOrdenPorReferencia(string referencia, string motivo)
+        {
+            LoteReapertura l = new LoteReapertura();
+            l.AgregarPorReferencia(referencia, motivo);
+            return ReabrirOrdenes(l);
         }
 
         /// <summary>

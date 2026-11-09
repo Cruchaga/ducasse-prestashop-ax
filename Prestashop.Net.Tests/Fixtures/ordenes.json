@@ -41,7 +41,7 @@
       ],
       "descuentos": [ { "codigo": "BIENVENIDA", "nombre": "Cupón bienvenida", "montoNeto": 3000, "montoBruto": 3570, "envioGratis": false } ],
       "mensajes": [ { "fecha": "2026-09-08T00:25:00-03:00", "texto": "Llamar antes de despachar" } ],
-      "integracion": { "estado": "entregada", "entregas": 2, "idVentaAx": "" },
+      "integracion": { "estado": "entregada", "entregas": 2, "idVentaAx": "", "reaperturas": 1, "idVentaAxAnterior": "OV-000123" },
       "campoFuturoDelContrato": { "algo": [1, 2, 3] }
     },
     {

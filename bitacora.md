@@ -7,6 +7,33 @@ Registro de lo realizado sobre la integración AX ↔ PrestaShop.
 
 ---
 
+# Sesión 2026-11-06 (2) — 2.1.1: reabrir por referencia
+
+A pedido de Iván: `LoteReapertura.AgregarPorReferencia(referencia, motivo)` y `Cliente.ReabrirOrdenPorReferencia(...)`
+(viaja `{referencia, motivo}`, sin `idOrden`; la clave del ítem es la referencia). Consola: `reabrir` acepta id o
+referencia. Tienda `dapintegracion` 1.2.1 (resuelve la referencia sin distinguir mayúsculas; 400 si no existe, 500 si
+es de varios pedidos). 68/68 en .NET 4.x y CLR 2. Contra v3 (candado de descarga retenido): `bayqpkglr` → orden 19
+`reabierta` y reconfirmada; `ZZZZZZZZZ` 400; sin motivo 300. Entrega `entrega-PrestaShopNet-v2.1.1/` (+ zip).
+
+# Sesión 2026-11-06 — 2.1.0: `ReabrirOrdenes` (volver a descargar una OC confirmada)
+
+Iván (6-nov): con la integración 1.7, si había un problema con una OC descargada, se borraba del monitor y el centinela
+la volvía a bajar; con la 2.0 una orden confirmada no se vuelve a entregar (solo el botón «Reenviar a AX» del BO).
+
+- **`Cliente.ReabrirOrdenes(LoteReapertura)`** y **`ReabrirOrden(idOrden, motivo)`** → `POST ordenes-reabrir`, ítems
+  `{idOrden, motivo}`. Resultado por ítem: `reabierta`, `sin_cambio` (no estaba confirmada), 500 (estado no integrable o
+  bajo `DESDE_ID`), 400, 300 (falta id o motivo). Mismo ciclo de lote que `ConfirmarOrdenes`.
+- **`OrdenDeVentaV2.Reaperturas`** e **`IdVentaAxAnterior`** (del bloque `integracion` del JSON; 0 / `""` si la tienda no
+  los manda).
+- Consola: escenario `reabrir <id>:<motivo> ...`; la orden muestra "reabierta Nx, venta anterior …".
+- Tienda: `dapintegracion` **1.2.0** (operación `ordenes-reabrir`, columnas de auditoría, el botón del BO usa la misma
+  lógica). Solo se agrega: contrato 2.0 sin cambios.
+- Pruebas: 66/66 en .NET 4.x y en CLR 2 (5 nuevas en `PruebasReapertura` + fixture). Contra v3 (6-nov, con el candado de
+  descarga tomado para que AX no bajara la orden de prueba): 19 `reabierta` → pendiente, `Reaperturas = 1`,
+  `IdVentaAxAnterior = OV-TEST-019`; reabrir otra vez `sin_cambio`; reconfirmar con `OV-TEST-019B` OK; 37 `sin_cambio`,
+  71 cancelada 500, 999999 400, 18 sin motivo 300.
+- Entrega: `D:/code/DapDucasse/ps9.1/dll_ax_dap004/entrega-PrestaShopNet-v2.1.0/` (+ zip). Versión 2.0.4 → **2.1.0**.
+
 # Sesión 2026-11-04 — 2.0.4: `IdComuna` entrega el código AX
 
 Iván Jerez (4-nov): "la DLL sigue devolviendo un Id de comuna extraño". Usaba `IdComuna` (id_state de la tienda).

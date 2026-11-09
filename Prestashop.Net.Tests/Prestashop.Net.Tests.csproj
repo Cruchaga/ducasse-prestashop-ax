@@ -27,6 +27,7 @@
     <Compile Include="PruebasLogConfig.cs" />
     <Compile Include="PruebasLotesLog.cs" />
     <Compile Include="PruebasOrdenesLotes.cs" />
+    <Compile Include="PruebasReapertura.cs" />
     <Compile Include="PruebasTransporte.cs" />
     <Compile Include="ServidorFalso.cs" />
   </ItemGroup>
